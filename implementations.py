@@ -17,12 +17,12 @@ Logistic regression related functions
 
 def logistic_regression_gradient(y, tx, w, *args):
     sigmoid = 1 / (1 + np.exp(- (tx @ w)))
-    return tx.T @ (sigmoid - (y + 1)/2)
+    return tx.T @ (sigmoid - 0.5 * (y + 1))
 
 
 def logistic_regression_loss(y, tx, w, *args):
     xtw = tx @ w    
-    return np.sum(np.log(1 + np.exp(xtw)) - (1 + y) / 2 * xtw)
+    return np.sum(np.log(1 + np.exp(xtw)) - 0.5 * (1 + y) * xtw)
 
 # Regularised logistic regression
 def reg_logistic_regression_loss(y, tx, w, lambda_):
