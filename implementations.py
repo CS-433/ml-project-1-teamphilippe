@@ -141,6 +141,7 @@ def compute_loss_least_squares(y, tx, w, *args):
     N = tx.shape[0]
     # error vector
     e = y - tx @ w
+
     return 1 / (2 * N) * e.T @ e
 
 def compute_gradient_least_squares(y, tx, w, *args):
@@ -212,6 +213,8 @@ Function used for Stochastic gradient descent
 """
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
+    This function was given as part of the exercice 2.
+    
     Generate a minibatch iterator for a dataset.
     Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
     Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
@@ -258,7 +261,7 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
             compute_gradient:
                 Function to use to compute the gradient of the weight vector
             lambda_ :
-                Regularizer of this ridge regression
+                The importance of the regulariser
             batch_size :
                 Size of the batch to use in the stochastic gradient descent
         Returns 
@@ -293,9 +296,7 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
         
         # store loss
         losses.append(loss)
-        
-        print("Gradient Descent({bi}/{ti}): loss={l:.10f}".format(
-            bi=n_iter, ti=max_iters - 1, l=loss))
+        #print("Gradient Descent({bi}/{ti}): loss={l:.10f}".format(bi=n_iter, ti=max_iters - 1, l=loss))
     return w, losses[-1]
 
 """
@@ -445,3 +446,70 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """
     return stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, reg_logistic_regression_loss,
                                        reg_logistic_regression_gradient, lambda_)
+
+def build_k_indices(y, k_fold, seed):
+    """build k indices for k-fold."""
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval: (k + 1) * interval]
+                 for k in range(k_fold)]
+    return np.array(k_indices)
+
+def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient):
+    """return the loss of ridge regression."""
+    
+    remain_indices = []
+    for i,l in enumerate(k_indices):
+        if(i!=k):
+            remain_indices =remain_indices + list(l)
+    
+    x_test = x[k_indices[k]]
+    y_test = y[k_indices[k]]
+
+    x_train = x[remain_indices]
+    y_train = y[remain_indices]
+
+
+    w,loss_tr =  stochastic_gradient_descent(y_train, x_train, initial_w, max_iters, gamma, compute_loss, compute_gradient, lambda_=lambda_)
+    
+    loss_te = compute_loss(y_test, x_test, w, lambda_)
+        
+    return np.sqrt(2*loss_te)
+
+def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k_fold=4, seed=1):
+    # Default parameters
+    lambdas = np.logspace(-4, 0, 30)
+    gammas = [0.05]#np.logspace(-4, 0, 10)
+    initial_w = np.zeros(tx.shape[1])
+    
+    # split data in k fold
+    k_indices = build_k_indices(y, k_fold, seed)
+    
+    nb_lambdas = len(lambdas)
+    nb_gammas = len(gammas)
+
+    rmse_te = np.zeros((nb_gammas, nb_lambdas))
+    
+    for ind_gamma, gamma in enumerate(gammas):
+        for ind_lambda, lambda_ in enumerate(lambdas):
+            rmse_te_tmp = []
+            for k in range(k_fold):
+                mse_te = cross_validation_one_step(y, tx, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient)
+                rmse_te_tmp.append(mse_te)
+
+            rmse_te[ind_gamma,ind_lambda] = np.mean(rmse_te_tmp)
+            
+    argmin = rmse_te.argmin()
+    best_gam_ind = argmin//nb_lambdas
+    best_lam_ind = argmin % nb_lambdas
+    
+    best_lambda = lambdas[best_lam_ind]
+    best_gamma = gammas[best_gam_ind]
+    
+    return stochastic_gradient_descent(y, tx, initial_w, max_iters, best_gamma, compute_loss, compute_gradient, lambda_=best_lambda)
+    
+           
+
+
