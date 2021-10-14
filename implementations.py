@@ -457,6 +457,15 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
     return np.array(k_indices)
 
+def split_data(x, y, ratio, seed=1):
+    """split the dataset based on the split ratio."""
+    # set seed
+    np.random.seed(seed)
+    idx = np.random.choice(y.shape[0], int(ratio * y.shape[0]), replace=False)
+    
+    return x[idx], y[idx], np.delete(x, idx, axis=0), np.delete(y, idx, axis=0)
+
+
 def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient):
     """return the loss of ridge regression."""
     
@@ -493,18 +502,22 @@ def perform_cross_validation(
             compute_loss:
                 Function to use to compute the loss
             compute_gradient: 
-                Function to use 
-            initial_w :
-                Initial weight vector used to compute the gradient
+                Function to use to compute the gradient
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
-            gamma :
+            k_fold: 
+                Number of passes for the cross-validation
+            seed:
+                Seed for random splitting
+            lambdas: 
+                Range of values to find the best lambda
+            gammas :
                 Step size of the stochastic gradient descent
         Returns 
         -------
             Tuple :
-                - Optimal weigth vector of the logistic regression
-                - Its corresponding loss
+                - Optimal lambda for the required method
+                - Optimal gamma for the required method
     
     """
     # Default parameters
@@ -516,17 +529,22 @@ def perform_cross_validation(
     nb_lambdas = len(lambdas)
     nb_gammas = len(gammas)
 
+    # Table which will store all the loss value for all lambda-gamma combination
     rmse_te = np.zeros((nb_gammas, nb_lambdas))
     
     for ind_gamma, gamma in enumerate(gammas):
         for ind_lambda, lambda_ in enumerate(lambdas):
             rmse_te_tmp = []
+            # Perform the cross validation
             for k in range(k_fold):
-                mse_te = cross_validation_one_step(y, tx, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient)
-                rmse_te_tmp.append(mse_te)
-
+                rmse = cross_validation_one_step(y, tx, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient)
+                rmse_te_tmp.append(rmse)
+                
+            #Report the mean square loss
             rmse_te[ind_gamma,ind_lambda] = np.mean(rmse_te_tmp)
-            
+           
+    
+    # Find the best arugments 
     argmin = rmse_te.argmin()
     best_gam_ind = argmin//nb_lambdas
     best_lam_ind = argmin % nb_lambdas
