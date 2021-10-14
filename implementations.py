@@ -478,10 +478,36 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
         
     return np.sqrt(2*loss_te)
 
-def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k_fold=4, seed=1):
+def perform_cross_validation(
+    y, tx, compute_loss, compute_gradient, max_iters, 
+    k_fold=4, seed=1, lambdas = np.logspace(-4, 0, 30), gammas = [0.05]):
+    """
+        Perform cross validation to find the best lambda (regulariser) and gamma (learning rate).
+        
+        Parameters
+        ----------
+            y :
+                Outputs of the data points
+            tx :
+                Data points
+            compute_loss:
+                Function to use to compute the loss
+            compute_gradient: 
+                Function to use 
+            initial_w :
+                Initial weight vector used to compute the gradient
+            max_iters :
+                Maximum number of iteration of the stochastic gradient descent
+            gamma :
+                Step size of the stochastic gradient descent
+        Returns 
+        -------
+            Tuple :
+                - Optimal weigth vector of the logistic regression
+                - Its corresponding loss
+    
+    """
     # Default parameters
-    lambdas = np.logspace(-4, 0, 30)
-    gammas = [0.05]#np.logspace(-4, 0, 10)
     initial_w = np.zeros(tx.shape[1])
     
     # split data in k fold
@@ -508,7 +534,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k
     best_lambda = lambdas[best_lam_ind]
     best_gamma = gammas[best_gam_ind]
     
-    return stochastic_gradient_descent(y, tx, initial_w, max_iters, best_gamma, compute_loss, compute_gradient, lambda_=best_lambda)
+    return best_lambda, best_gamma
     
            
 
