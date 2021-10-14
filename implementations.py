@@ -31,8 +31,7 @@ def standardize(x):
 """
 Logistic regression related functions
 """
-
-def logistic_regression_gradient(y, tx, w, *args):
+def compute_logistic_regression_gradient(y, tx, w, *args):
     """
         Function that computes the gradient of wiegth vector w in the case of the logistic regression
         
@@ -54,7 +53,7 @@ def logistic_regression_gradient(y, tx, w, *args):
     return tx.T @ (sigmoid - 0.5 * (y + 1))
 
 
-def logistic_regression_loss(y, tx, w, *args):
+def compute_logistic_regression_loss(y, tx, w, *args):
     """
         Function that compute the loss of the weight vector w in the case of the logistic regression
         
@@ -74,7 +73,7 @@ def logistic_regression_loss(y, tx, w, *args):
     return np.sum(np.log(1 + np.exp(xtw)) - 0.5 * (1 + y) * xtw)
 
 # Regularized logistic regression
-def reg_logistic_regression_loss(y, tx, w, lambda_):
+def compute_reg_logistic_regression_loss(y, tx, w, lambda_):
     """
         Function that compute the loss of the weight vector w in the case of the regularized logistic regression
         
@@ -92,10 +91,10 @@ def reg_logistic_regression_loss(y, tx, w, lambda_):
         -------
             Loss of the weight vector, using the regularized logistic regression method, computed with the parameters
     """
-    return logistic_regression_loss(y, tx, w) + 0.5 * lambda_ * (w.T @ w)
+    return compute_logistic_regression_loss(y, tx, w) + 0.5 * lambda_ * (w.T @ w)
 
 
-def reg_logistic_regression_gradient(y, tx, w, lambda_):
+def compute_reg_logistic_regression_gradient(y, tx, w, lambda_):
     """
         Function that computes the gradient of the wieght vector w in the case of the regularized logistic regression
         
@@ -114,7 +113,30 @@ def reg_logistic_regression_gradient(y, tx, w, lambda_):
             Gradient, using the regularized logistic regression method, computed with the parameters
             
     """
-    return logistic_regression_gradient(y, tx, w) + lambda_ * w
+    return compute_logistic_regression_gradient(y, tx, w) + lambda_ * w
+
+
+def predict_labels_logistic_regression(weights, x):
+    """
+        Function that computes the predictions for the given data of the logistic regression model with given the weights
+        
+        Parameters 
+        ----------
+            weights :
+                Trained weights of the model
+            y :
+                Data points
+        Returns 
+        -------
+            Predicted labels of the model for the given data
+            
+    """
+    y = 1 / (1 + np.exp(- x @ weights))
+    
+    y[y >= 0.5] = 1
+    y[y < 0.5] = -1
+    
+    return y
 
 
 """
@@ -491,7 +513,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k
     nb_gammas = len(gammas)
 
     rmse_te = np.zeros((nb_gammas, nb_lambdas))
-    
+   
     for ind_gamma, gamma in enumerate(gammas):
         for ind_lambda, lambda_ in enumerate(lambdas):
             rmse_te_tmp = []
@@ -511,5 +533,23 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k
     return stochastic_gradient_descent(y, tx, initial_w, max_iters, best_gamma, compute_loss, compute_gradient, lambda_=best_lambda)
     
            
+def split_data(x, y, ratio, seed=1):
+    """split the dataset based on the split ratio."""
+    # set seed
+    np.random.seed(seed)
+    # generate random indices
+    num_row = len(y)
+    indices = np.random.permutation(num_row)
+    index_split = int(np.floor(ratio * num_row))
+    index_tr = indices[: index_split]
+    index_te = indices[index_split:]
+    # create split
+    x_tr = x[index_tr]
+    x_te = x[index_te]
+    y_tr = y[index_tr]
+    y_te = y[index_te]
+    return x_tr, x_te, y_tr, y_te
 
 
+def compute_accuracy(y, y_hat):
+    return np.mean(y == y_hat)
