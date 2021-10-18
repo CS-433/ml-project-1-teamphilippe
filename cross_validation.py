@@ -269,7 +269,7 @@ def train_and_predict(y_tr, x_tr, x_te, model, seed, initial_w, max_iters, lambd
     return y_hat_te, w
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.logspace(-4, 0, 30), gammas=[0.05]):
+def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=1000, lambdas=np.logspace(-4, 0, 30), gammas=[0.005]):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 

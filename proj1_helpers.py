@@ -2,6 +2,7 @@
 """some helper functions for project 1."""
 import csv
 import numpy as np
+from cleaning import *
 
 
 def load_csv_data(data_path, sub_sample=False):
@@ -62,30 +63,6 @@ def compute_rmse(mse):
             Root Mean Square Error
     """
     return np.sqrt(2 * mse)
-
-def standardize(x):
-    """
-        Standardize the original data set according to the formula : (x-mean(x))/std(x).
-        
-    Parameters
-    ----------
-        x :
-            Data points to standardize
-    Returns
-    -------
-        x : 
-            Data points standardized
-        mean_x :
-            Mean of x before standardization
-        std_x :
-            Standard deviation of x before standardization
-        
-    """
-    mean_x = np.mean(x)
-    x = x - mean_x
-    std_x = np.std(x)
-    x = x / std_x
-    return x, mean_x, std_x
 
 
 def split_data(x, y, ratio, seed=1):
