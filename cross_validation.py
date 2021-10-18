@@ -379,7 +379,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
     return y_hat_te, w, loss_mse
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.logspace(-100, 0, 150), gammas=[0.0001]):
+def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.logspace(-10, 0, 50), gammas=[0.0001]):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -417,10 +417,11 @@ def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.
     # Initialize some settings
     initial_w = np.zeros((x_tr.shape[1]))
 
-    y_hat_te, w_opti,loss_mse = train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters, lambdas, gammas)
+    y_hat_te, w_opti, loss_mse = train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters, lambdas, gammas)
 
     # Compute the accuracy on the local test set
     accuracy_test = compute_accuracy(y_te, y_hat_te)
-
+    f1_test = compute_f1_score(y_te, y_hat_te)
     print(f'Accuracy of {model} on the local test set : {accuracy_test:.4f}')
-    return accuracy_test, w_opti
+    print(f'F1-score of {model} on the local test set : {f1_test:.4f}')
+    return accuracy_test, f1_test, w_opti

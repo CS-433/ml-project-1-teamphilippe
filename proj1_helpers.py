@@ -154,6 +154,6 @@ def compute_f1_score(y, y_hat):
     subs_y = y[mask_positive]
     subs_y_hat = y_hat[mask_positive]
     
-    tp = np.equals(subs_y,subs_y_hat).sum()
+    tp = np.equal(subs_y,subs_y_hat).sum()
     
     return tp/(tp+1/2*not_classified_correctly)
