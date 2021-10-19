@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 Functions for the cross validation
 """
 
-
-
 def build_k_indices(y, k_fold, seed):
     """
         Randomly sample k groups of indices in the dataset 
@@ -39,6 +37,37 @@ def build_k_indices(y, k_fold, seed):
     return np.array(k_indices)
 
 
+
+
+def cross_validation_visualization(lambdas, rmse_tr, rmse_te, logy=False):
+    """visualization the curves of mse_tr and mse_te.
+        Parameters
+            ----------
+                optimization
+                lambdas:
+                    lambda that were used to compute the loss on the train and test set
+                mse_tr:
+                    The losses on the train set 
+                mse_te:
+                    The losses on the test set
+                logy:
+                    True if the plot should be a log-log plot, log-lin plot otherwise
+    """
+    # This method comes from the helper "plots.py" and was given in lab 4
+    
+    if logy:
+        plt.loglog(lambdas, rmse_tr, marker=".", color='b', label='train error')
+        plt.loglog(lambdas, rmse_te, marker=".", color='r', label='test error')
+    else:
+        plt.semilogx(lambdas, rmse_tr, marker=".", color='b', label='train error')
+        plt.semilogx(lambdas, rmse_te, marker=".", color='r', label='test error')
+        
+    plt.xlabel("Lambda")
+    plt.ylabel("RMSE")
+    plt.title("Cross validation")
+    plt.legend(loc=2)
+    plt.grid(True)
+    
 def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient,
                               optimization='sgd', batch_size=1):
     """
@@ -82,6 +111,10 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
 
     x_train = np.delete(x, k_indices[k], axis=0)
     y_train = np.delete(y, k_indices[k], axis=0)
+    
+   
+    
+    initial_w = np.zeros(x_train.shape[1])
 
     if optimization == 'sgd':
         w, loss_tr = stochastic_gradient_descent(y_train, x_train, initial_w, max_iters, gamma, compute_loss,
@@ -94,37 +127,11 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
         return
 
     loss_te = compute_loss(y_test, x_test, w, lambda_)
+    
     return compute_rmse(loss_tr), compute_rmse(loss_te)
 
-def cross_validation_visualization(lambdas, mse_tr, mse_te,logy=True):
-    """visualization the curves of mse_tr and mse_te.
-        Parameters
-            ----------
-                optimization
-                lambdas:
-                    lambda that were used to compute the loss on the train and test set
-                mse_tr:
-                    The losses on the train set 
-                mse_te:
-                    The losses on the test set
-                logy:
-                    True if the plot should be a log-log plot, log-lin plot otherwise
-    """
-    # This method comes from the helper "plots.py" and was given in lab 4
     
-    if logy:
-        plt.loglog(lambdas, mse_tr, marker=".", color='b', label='train error')
-        plt.loglog(lambdas, mse_te, marker=".", color='r', label='test error')
-    else:
-        plt.semilogx(lambdas, mse_tr, marker=".", color='b', label='train error')
-        plt.semilogx(lambdas, mse_te, marker=".", color='r', label='test error')
-    plt.xlabel("Lambda")
-    plt.ylabel("RMSE")
-    plt.title("Cross validation")
-    plt.legend(loc=2)
-    plt.grid(True)
-
-def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k_fold=4, seed=1,
+def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, initial_w , k_fold=4, seed=1,
                              lambdas=np.logspace(-4, 0, 30), gammas=[0.05], batch_size=1, optimization='sgd'):
     """
         Perform cross validation to find the best lambda (regulariser) and gamma (learning rate).
@@ -161,8 +168,6 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k
                 - Optimal gamma for the required method
                 - RMSE according for the different values of the hyperparameters
     """
-    # Default parameters
-    initial_w = np.zeros(tx.shape[1])
 
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
@@ -182,7 +187,8 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k
             
             # Perform the cross validation
             for k in range(k_fold):
-                rmse_training, rmse_test  = cross_validation_one_step(y, tx, initial_w, k_indices, k, max_iters, gamma, lambda_,
+                rmse_training, rmse_test  = cross_validation_one_step(y, tx, initial_w, k_indices,
+                                                                      k, max_iters, gamma, lambda_,
                                                  compute_loss, compute_gradient, optimization, batch_size)
                 rmse_te_tmp.append(rmse_test)
                 rmse_tr_tmp.append(rmse_training)
@@ -192,7 +198,8 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, k
             rmse_tr[ind_lambda, ind_gamma] = np.mean(rmse_tr_tmp)
     
     # Plot the loss of the test and the train set
-    cross_validation_visualization(lambdas, rmse_tr, rmse_te)
+    if(nb_gammas==1):
+        cross_validation_visualization(lambdas, rmse_tr, rmse_te)
     
     # Find the best arugments 
     argmin = rmse_te.argmin()
@@ -241,7 +248,6 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, initial_w, max_ite
     """
 
     # Define parameters to store w and loss
-    ws = [initial_w]
     losses = []
     losses_test = []
     
@@ -260,9 +266,6 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, initial_w, max_ite
 
             # Gradient Descent
             w = w - gamma * sgrad
-
-            # store w
-            ws.append(w)
 
         # store loss
         losses.append(loss)
@@ -310,10 +313,14 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
     if model in ['logistic_regression', 'reg_logistic_regression']:
         if model == 'logistic_regression':
             # Cross validate the regularizer coefficient and the learning rate
-            best_lambda, best_gamma = perform_cross_validation(
-                y_tr, x_tr,
-                compute_loss_logistic_regression, compute_gradient_logistic_regression,
-                max_iters, seed=seed, lambdas=[1], gammas=gammas)
+            
+            if(len(gammas)>1):
+                best_lambda, best_gamma = perform_cross_validation(
+                    y_tr, x_tr,
+                    compute_loss_logistic_regression, compute_gradient_logistic_regression,
+                    max_iters, initial_w, seed=seed, lambdas=[0.0], gammas=gammas)
+            else:
+                best_lambda, best_gamma = 0.0, gammas[0]
 
             # Train the model on the local training set
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, initial_w, max_iters, best_gamma,
@@ -323,10 +330,10 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
             best_lambda, best_gamma = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_reg_logistic_regression, compute_gradient_reg_logistic_regression,
-                max_iters, seed=seed, lambdas=lambdas, gammas=gammas)
+                max_iters, initial_w, seed=seed, lambdas=lambdas, gammas=gammas)
 
-            w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te,  initial_w, max_iters, best_gamma,
-                                                        compute_loss_reg_logistic_regression, compute_gradient_reg_logistic_regression, lambda_=best_lambda)
+            w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, initial_w, max_iters, best_gamma,
+                                                            compute_loss_reg_logistic_regression, compute_gradient_reg_logistic_regression, lambda_=best_lambda)
 
         else:
             print(f'Model ({model}) not supported')
@@ -343,7 +350,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
             best_lambda, best_gamma = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares,
-                max_iters, seed=seed, lambdas=[1], gammas=gammas, batch_size=y_tr.shape[0])
+                max_iters, initial_w, seed=seed, lambdas=[1], gammas=gammas, batch_size=y_tr.shape[0])
 
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, initial_w, max_iters, best_gamma,
                                                      compute_loss_least_squares,compute_gradient_least_squares,batch_size=len(x_tr))
@@ -353,7 +360,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
             best_lambda, best_gamma = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares,
-                max_iters, seed=seed, lambdas=[1], gammas=gammas)
+                max_iters, initial_w, seed=seed, lambdas=[1], gammas=gammas)
 
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, initial_w, max_iters, best_gamma,
                                                       compute_loss_least_squares, compute_gradient_least_squares)
@@ -365,7 +372,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
             best_lambda, best_gamma = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares,
-                max_iters, seed=seed, lambdas=lambdas, gammas=gammas, optimization='ridge_normal_eq')
+                max_iters, initial_w, seed=seed, lambdas=lambdas, gammas=gammas, optimization='ridge_normal_eq')
 
             w, loss_mse = ridge_regression(y_tr, x_tr, best_lambda)
 
@@ -379,7 +386,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
     return y_hat_te, w, loss_mse
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.logspace(-10, 0, 50), gammas=[0.0001]):
+def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.logspace(-4, 0, 30), gammas=[0.095]):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -411,8 +418,8 @@ def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
 
     # Standardize all the features
-    x_tr, mean_x_tr, std_x_tr = standardize(x_tr)
-    x_te, mean_x_te, std_x_te = standardize(x_te)
+    x_tr, _, _ = standardize(x_tr)
+    x_te, _, _ = standardize(x_te)
 
     # Initialize some settings
     initial_w = np.zeros((x_tr.shape[1]))
@@ -422,6 +429,7 @@ def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.
     # Compute the accuracy on the local test set
     accuracy_test = compute_accuracy(y_te, y_hat_te)
     f1_test = compute_f1_score(y_te, y_hat_te)
+    
     print(f'Accuracy of {model} on the local test set : {accuracy_test:.4f}')
     print(f'F1-score of {model} on the local test set : {f1_test:.4f}')
     return accuracy_test, f1_test, w_opti
