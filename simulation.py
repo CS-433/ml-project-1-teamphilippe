@@ -144,7 +144,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
                 compute_loss_least_squares, compute_gradient_least_squares,
                 max_iters, initial_w, seed=seed, lambdas=[0.0], gammas=gammas, batch_size=y_tr.shape[0])
 
-            # Train the model with the best parameters on the local training set + plot the loss curves
+            # Train the model with the best parameters on the local training set + plot the loss curves. We train with all the samples 
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, initial_w, max_iters, best_gamma,
                                                      compute_loss_least_squares,compute_gradient_least_squares, batch_size=len(x_tr))
 
@@ -153,7 +153,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
             best_lambda, best_gamma = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares,
-                max_iters, initial_w, seed=seed, lambdas=[1], gammas=gammas)
+                max_iters, initial_w, seed=seed, lambdas=[0.0], gammas=gammas)
 
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, initial_w, max_iters, best_gamma,
@@ -167,7 +167,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
             # Cross validation to find the best lambda (no gradient descent => gamma is not used)
             best_lambda, _ = perform_cross_validation(
                 y_tr, x_tr,
-                compute_loss_least_squares, compute_gradient_least_squares,
+                compute_loss_ridge, compute_gradient_ridge_regression,
                 max_iters, initial_w, seed=seed, lambdas=lambdas, gammas=[0.0], optimization='ridge_normal_eq')
 
             # Train the model with the best parameters on the local training set + plot the loss curves

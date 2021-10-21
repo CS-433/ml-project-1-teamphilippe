@@ -107,24 +107,24 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
             RMSE loss on the leaved out fold
     """
     # Build the local train/test folds
-    x_test = x[k_indices[k]]
-    y_test = y[k_indices[k]]
+    x_test_cv = x[k_indices[k]]
+    y_test_cv = y[k_indices[k]]
 
-    x_train = np.delete(x, k_indices[k], axis=0)
-    y_train = np.delete(y, k_indices[k], axis=0)
+    x_train_cv = np.delete(x, k_indices[k], axis=0)
+    y_train_cv = np.delete(y, k_indices[k], axis=0)
     
 
     if optimization == 'sgd':
-        w, loss_tr = stochastic_gradient_descent(y_train, x_train, initial_w, max_iters, gamma, compute_loss,
+        w, loss_tr = stochastic_gradient_descent(y_train_cv, x_train_cv, initial_w, max_iters, gamma, compute_loss,
                                                  compute_gradient, lambda_=lambda_, batch_size=batch_size)
     elif optimization == 'ridge_normal_eq':
-        w, loss_tr = ridge_regression(y_train, x_train, lambda_)
+        w, loss_tr = ridge_regression(y_train_cv, x_train_cv, lambda_)
 
     else:
         print(f'Optimization method not supported {optimization}')
         return
     
-    loss_te = compute_loss(y_test, x_test, w, lambda_)
+    loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
     return compute_rmse(loss_tr), compute_rmse(loss_te)
 
     
