@@ -25,7 +25,7 @@ def check_nb_rows_default_features(x):
     def check_row_default_features(row):
         return np.sum(row == -999) > (row.shape[0]/2)
     
-    mask = np.apply_along_axis(check_row_default_features, axis=0, arr=x_cleaned)
+    mask = np.apply_along_axis(check_row_default_features, axis=0, arr=x)
     print(f'Number of rows : {np.sum(mask)}')
     
     

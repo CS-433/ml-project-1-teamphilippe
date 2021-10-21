@@ -202,7 +202,7 @@ def compute_loss_logistic_regression(y, tx, w, *args):
             Loss of the weight vector, using the logistic regression method, computed with the parameters
     """
     xtw = tx @ w
-    return np.sum(np.log(1 + np.exp(xtw)) - 0.5 * (1 + y) * xtw)
+    return np.sum(np.log(1 + np.exp(xtw)) - 0.5 * (1 + y) * xtw) / tx.shape[0]
 
 
 # Regularized logistic regression
@@ -224,7 +224,7 @@ def compute_loss_reg_logistic_regression(y, tx, w, lambda_):
         -------
             Loss of the weight vector, using the regularized logistic regression method, computed with the parameters
     """
-    return compute_loss_logistic_regression(y, tx, w) + 0.5 * lambda_ * (w.T @ w)
+    return compute_loss_logistic_regression(y, tx, w) #+ 0.5 * lambda_ * (w.T @ w)
 
 
 def compute_gradient_reg_logistic_regression(y, tx, w, lambda_):
@@ -363,7 +363,7 @@ def compute_loss_ridge(y, tx, w, lambda_):
         -------
             Loss of the weight vector, using the ridge regression method, computed with the parameters
     """
-    return compute_loss_least_squares(y, tx, w) + lambda_ * w.T @ w
+    return compute_loss_least_squares(y, tx, w) #+ lambda_ * w.T @ w
 
 
 """
@@ -433,7 +433,6 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
     """
 
     # Define parameters to store w and loss
-    ws = [initial_w]
     losses = []
     w = initial_w
 
@@ -450,10 +449,7 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
             # Gradient Descent
             w = w - gamma * sgrad
 
-            # store w
-            ws.append(w)
-
         # store loss
         losses.append(loss)
-        # print("Gradient Descent({bi}/{ti}): loss={l:.10f}".format(bi=n_iter, ti=max_iters - 1, l=loss))
+        
     return w, losses[-1]

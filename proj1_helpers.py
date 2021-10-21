@@ -33,7 +33,6 @@ def predict_labels(weights, data):
     
     return y_pred
 
-
 def create_csv_submission(ids, y_pred, name):
     """
     Creates an output file in .csv format for submission to Kaggle or AIcrowd
@@ -107,6 +106,30 @@ def compute_accuracy(y, y_hat):
                 Predicted labels
         Returns
         -------
-            Accuracy in [0;1]
+            Accuracy in the range [0;1]
     """
     return np.mean(np.equal(y, y_hat))
+
+def compute_f1_score(y, y_hat):
+    """
+        Compute the accuracy given the ground truth and the predicted data according to the definition on Wikipedia.w
+
+        Parameters
+        ----------
+            y :
+                Ground labels
+            y_hat :
+                Predicted labels
+        Returns
+        -------
+            F1-score in the range [0;1]
+    """
+    not_classified_correctly = np.sum(~np.equal(y, y_hat))
+    mask_classified_positive = y>0
+    
+    subs_y = y[mask_classified_positive]
+    subs_y_hat = y_hat[mask_classified_positive]
+    
+    tp = np.equal(subs_y,subs_y_hat).sum()
+    
+    return tp/(tp+1/2*not_classified_correctly)
