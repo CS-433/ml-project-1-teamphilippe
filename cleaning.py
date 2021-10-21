@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import itertools
+from proj1_helpers import *
 
 def check_all_azimuth_angles(x):
     """
@@ -205,3 +207,69 @@ def standardize(x):
     std_x = np.std(x)
     x = x / std_x
     return x, mean_x, std_x
+
+
+def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training, below_lim_training):
+    """
+    Load and pre-process test set 
+    Parameters
+    ----------
+        test_data_path :
+             the os path to the test data set
+    Returns
+    -------
+         x_te_cleaned:
+             The test data set cleaned and ready for predictions
+    """
+    # load the data
+    y_test, x_test, ids_test = load_csv_data(test_data_path)
+    
+    # Apply pre-processing
+    x_te_cleaned,_ = remove_col_default_values(x_test, cols_to_remove=col_removed_training)
+    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned)
+    x_te_cleaned,_ = replace_by_default_value(x_te_cleaned, default_values_training)
+    x_te_cleaned, _, _ = clip_IQR(x_te_cleaned, above_lim=above_lim_training, below_lim = below_lim_training)
+    
+    # Standardise the matrix and expand it
+    x_te_cleaned, _, _ = standardize(x_te_cleaned)
+    x_te_cleaned = add_bias_term(x_te_cleaned)
+    x_te_cleaned = build_expansion(x_te_cleaned)
+    
+    return x_te_cleaned, ids_test, y_test
+
+
+def build_expansion(data):
+    """
+    Build the a data matrix composed of product of every pair of columns
+    Parameters
+    ----------
+        data :
+            The data matrix
+    Returns
+    -------
+        all_columns_com : 
+            A new dataset composed of product of every pair of columns 
+    
+    """
+    # Build all possible pairs of number up to n=data.shape[1]
+    combinations = np.array(list(itertools.combinations_with_replacement(range(data.shape[1]),2)))
+    # Construct the product of every pair of columns in the dataset
+    all_columns_com = data[:,combinations[:,0]] *data[:,combinations[:,1]]
+    return all_columns_com
+
+def add_bias_term(data):
+    """
+    Add a column of 1 in the data matrix to handle the bias term
+    Parameters
+    ----------
+        data :
+            The data 
+    Returns
+    -------
+        data_with_bias : 
+            The dataset with a column of 1 
+    
+    """
+    data_with_bias = np.hstack((np.ones((data.shape[0],1)),data))
+    return data_with_bias
+    
