@@ -3,6 +3,7 @@
 import csv
 import numpy as np
 from cleaning import *
+import itertools
 
 
 def load_csv_data(data_path, sub_sample=False):
@@ -23,6 +24,15 @@ def load_csv_data(data_path, sub_sample=False):
         ids = ids[::50]
 
     return yb, input_data, ids
+
+
+def build_expansion(data):
+    combinations = np.array(list(itertools.combinations_with_replacement(range(data.shape[1]),2)))
+    return data[:,combinations[:,0]] *data[:,combinations[:,1]]
+
+def add_bias_term(data):
+    return np.hstack((np.ones((data.shape[0],1)),data))
+    
 
 
 def predict_labels(weights, data):

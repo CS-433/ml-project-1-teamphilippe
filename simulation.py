@@ -183,7 +183,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
     return y_hat_te, w, loss_mse
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.logspace(-4, 0, 30), gammas=[0.095]):
+def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=1000, lambdas=np.logspace(-4, 0, 50), gammas=[0.00095]):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -213,11 +213,17 @@ def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=100, lambdas=np.
     """
     # Split the training set into a local training set and a local test set
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
-
+    
     # Standardize all the features
     x_tr, _, _ = standardize(x_tr)
     x_te, _, _ = standardize(x_te)
+    
+    x_tr = add_bias_term(x_tr)
+    x_te = add_bias_term(x_te)
 
+    x_tr = build_expansion(x_tr)
+    x_te = build_expansion(x_te)
+    
     # Initialize some settings
     initial_w = np.zeros((x_tr.shape[1]))
 
