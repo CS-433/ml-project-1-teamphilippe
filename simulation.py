@@ -213,17 +213,17 @@ def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=1000, lambdas=np
     """
     # Split the training set into a local training set and a local test set
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
-
-    exp_x_tr = build_expansion(x_tr)
-    exp_x_te = build_expansion(x_te)
     
     # Standardize all the features
-    x_tr, _, _ = standardize(exp_x_tr)
-    x_te, _, _ = standardize(exp_x_te)
+    x_tr, _, _ = standardize(x_tr)
+    x_te, _, _ = standardize(x_te)
     
     x_tr = add_bias_term(x_tr)
     x_te = add_bias_term(x_te)
 
+    x_tr = build_expansion(x_tr)
+    x_te = build_expansion(x_te)
+    
     # Initialize some settings
     initial_w = np.zeros((x_tr.shape[1]))
 

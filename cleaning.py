@@ -3,13 +3,24 @@
 import numpy as np
 
 def check_all_azimuth_angles(x):
-    x_cleaned = x.copy()
-    x_cleaned = check_azimuth_and_rerange(x_cleaned, 15)
-    x_cleaned = check_azimuth_and_rerange(x_cleaned, 18)
-    x_cleaned = check_azimuth_and_rerange(x_cleaned, 20)
-    x_cleaned = check_azimuth_and_rerange(x_cleaned, 25)
-    x_cleaned = check_azimuth_and_rerange(x_cleaned, 28)
-    return x_cleaned
+    """
+    This function check that all the angle valued columns are in the range [-pi,pi[
+    
+    Parameters
+    ----------
+        x : 
+            The dataset to which we want to apply the method
+    Returns
+    -------
+        x : 
+            The cleaned dataset 
+        
+    """
+    x = check_azimuth_and_rerange(x, 11)
+    x = check_azimuth_and_rerange(x, 14)
+    x = check_azimuth_and_rerange(x, 16)
+    x = check_azimuth_and_rerange(x, 21)
+    return x
 
 # Replace the remaining -999 by the median/mean/0s
 def replace_by_default_value(x_cleaned, default_values = None):
@@ -58,7 +69,6 @@ def check_azimuth_and_rerange(x, col_idx):
 
 # We remove the features where more than half of the rows are -999
 def remove_col_default_values(x, cols_to_remove = None):
-
     if cols_to_remove is None:
         cols_to_remove = []
         for i in range(x.shape[1]) :
