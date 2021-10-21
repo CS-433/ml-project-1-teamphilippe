@@ -37,9 +37,6 @@ def build_k_indices(y, k_fold, seed):
 
     return np.array(k_indices)
 
-
-
-
 def cross_validation_visualization(lambdas, rmse_tr, rmse_te, logy=False):
     """visualization the curves of mse_tr and mse_te.
         Parameters
@@ -56,6 +53,7 @@ def cross_validation_visualization(lambdas, rmse_tr, rmse_te, logy=False):
     """
     # This method comes from the helper "plots.py" and was given in lab 4
     
+    # Plots either a log log plot or a semilog plot depending on what is asked
     if logy:
         plt.loglog(lambdas, rmse_tr, marker=".", color='b', label='train error')
         plt.loglog(lambdas, rmse_te, marker=".", color='r', label='test error')
@@ -114,6 +112,7 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
     y_train_cv = np.delete(y, k_indices[k], axis=0)
     
 
+    # Compute the optimal weights and the loss according to the chosen method
     if optimization == 'sgd':
         w, loss_tr = stochastic_gradient_descent(y_train_cv, x_train_cv, initial_w, max_iters, gamma, compute_loss,
                                                  compute_gradient, lambda_=lambda_, batch_size=batch_size)

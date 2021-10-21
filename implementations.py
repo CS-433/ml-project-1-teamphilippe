@@ -59,7 +59,6 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
     return stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss_least_squares,
                                        compute_gradient_least_squares)
 
-
 def least_squares(y, tx):
     """
         Calculate the solution of the least square equation
@@ -80,7 +79,6 @@ def least_squares(y, tx):
     w = np.linalg.solve(tx.T @ tx, tx.T @ y)
 
     return w, compute_loss_least_squares(y, tx, w)
-
 
 def ridge_regression(y, tx, lambda_):
     """
@@ -161,8 +159,6 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
 """
 Logistic regression related functions
 """
-
-
 def compute_gradient_logistic_regression(y, tx, w, *args):
     """
         Function that computes the gradient of weight vector w in the case of the logistic regression
@@ -275,8 +271,6 @@ def predict_labels_logistic_regression(weights, x):
 """
 Least squares related functions
 """
-
-
 def compute_loss_least_squares(y, tx, w, *args):
     """
         Function that compute the loss of the weight vector according to the least square method
