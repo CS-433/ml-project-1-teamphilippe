@@ -59,7 +59,7 @@ def check_azimuth_and_rerange(x, col_idx):
 # We remove the features where more than half of the rows are -999
 def remove_col_default_values(x, cols_to_remove = None):
 
-    if cols_to_remove==None:
+    if cols_to_remove is None:
         cols_to_remove = []
         for i in range(x.shape[1]) :
             if (np.where(x[:, i] == -999)[0]).shape[0] > (x.shape[0]/2) :
