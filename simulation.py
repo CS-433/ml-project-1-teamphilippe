@@ -275,10 +275,6 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
         x_tr = build_expansion(x_tr)
         x_te = build_expansion(x_te)
         
-        # Add the columns to the angle list 
-        angles_augm = angle_cols.copy()
-        angles_augm.append(0)
-        
         x_tr = add_sin_cos(x_tr, angles_augm)
         x_te = add_sin_cos(x_te, angles_augm)
     
