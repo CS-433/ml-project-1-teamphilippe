@@ -3,6 +3,8 @@ from implementations import *
 from proj1_helpers import *
 import matplotlib.pyplot as plt
 from cross_validation import *
+from metrics import *
+from expansion import *
 
 """
 Customise version of the stochastic gradient descent to show plot of the loss function 
@@ -65,12 +67,42 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, initial_w, max_ite
         losses_test.append(loss_te)
         
     # Plot the test and training losses to see the convergence
-    #plt.plot(losses)
-    #plt.plot(losses_test)
-    #plt.show()
+    plt.plot(losses)
+    plt.plot(losses_test)
+    plt.show()
     return w, losses[-1]
 
 
+
+def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training, below_lim_training, angle_cols, expansion=True):
+    """
+    Load and pre-process test set 
+    Parameters
+    ----------
+        test_data_path :
+             the os path to the test data set
+    Returns
+    -------
+         x_te_cleaned:
+             The test data set cleaned and ready for predictions
+    """
+    # load the data
+    y_test, x_test, ids_test = load_csv_data(test_data_path)
+    
+    # Apply pre-processing
+    x_te_cleaned,_ = remove_col_default_values(x_test, cols_to_remove=col_removed_training)
+    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned)
+    x_te_cleaned,_ = replace_by_default_value(x_te_cleaned, default_values_training)
+    x_te_cleaned, _, _ = clip_IQR(x_te_cleaned, above_lim=above_lim_training, below_lim = below_lim_training)
+    
+    # Standardise the matrix and expand it
+    x_te_cleaned, _, _ = standardize(x_te_cleaned)
+    if expansion:
+        x_te_cleaned = add_bias_term(x_te_cleaned)
+        x_te_cleaned = build_expansion(x_te_cleaned)
+        x_te_cleaned = add_sin_cos(x_te_cleaned, angle_cols)
+    
+    return x_te_cleaned, ids_test, y_test
 
 def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters, lambdas, gammas):
     """
@@ -170,7 +202,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
                 compute_loss_ridge, compute_gradient_ridge_regression,
                 max_iters, initial_w, seed=seed, lambdas=lambdas, gammas=[0.0], optimization='ridge_normal_eq')
 
-            # Train the model with the best parameters on the local training set + plot the loss curves
+            # Return the solution to the normal equation
             w, loss_mse = ridge_regression(y_tr, x_tr, best_lambda)
 
         else:
@@ -183,7 +215,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters,
     return y_hat_te, w, loss_mse
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=1000, lambdas=np.logspace(-4, 0, 50), gammas=[0.00095]):
+def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 3, 100), gammas=[0.00095]):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -220,15 +252,32 @@ def run_experiment(y, x, model, seed, ratio_split_tr, max_iters=1000, lambdas=np
     
     x_tr = add_bias_term(x_tr)
     x_te = add_bias_term(x_te)
-
-    x_tr = build_expansion(x_tr)
-    x_te = build_expansion(x_te)
+    
+    
+    
+    if(model in ['logistic_regression', 'reg_logistic_regression']):
+        # As explained on the forum, the input for the logistic regression should have label in {0,1}
+        y_tr[y_tr == -1.0] = 0.0
+        y_te[y_te == -1.0] = 0.0
+    else:
+        # If we do not a logistic regression model, we can do polynomial expansion in the input features
+        # Running time is too slow to do this with logistic regression
+        x_tr = build_expansion(x_tr)
+        x_te = build_expansion(x_te)
+        
+        angle_cols.append(0)
+        x_tr = add_sin_cos(x_tr, angle_cols)
+        x_te = add_sin_cos(x_te, angle_cols)
+    
+    print("End of processing + expansion")
+    print("Beginning training")
     
     # Initialize some settings
     initial_w = np.zeros((x_tr.shape[1]))
-
-    y_hat_te, w_opti, loss_mse = train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, initial_w, max_iters, lambdas, gammas)
-
+    
+    y_hat_te, w_opti, loss_mse = train_and_predict(y_tr, x_tr, y_te, x_te, 
+                                                    model, seed, initial_w, max_iters, lambdas, gammas)
+    
     # Compute the accuracy on the local test set
     accuracy_test = compute_accuracy(y_te, y_hat_te)
     f1_test = compute_f1_score(y_te, y_hat_te)

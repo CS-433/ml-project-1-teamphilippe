@@ -123,12 +123,14 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
         print(f'Optimization method not supported {optimization}')
         return
     
-    loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
-    return compute_rmse(loss_tr), compute_rmse(loss_te)
-
+    #loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
+    acc_test = compute_accuracy(y_test_cv, predict_labels(w, x_test_cv))
+    acc_train = compute_accuracy(y_train_cv, predict_labels(w, x_train_cv))
+    #return compute_rmse(loss_tr), compute_rmse(loss_te)
+    return acc_train, acc_test
     
-def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, initial_w , k_fold=10, seed=1,
-                             lambdas=np.logspace(-4, 0, 30), gammas=[0.05], batch_size=1, optimization='sgd'):
+def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, initial_w , 
+                             k_fold=8, seed=1, lambdas=np.logspace(-4, 0, 30), gammas=[0.05], batch_size=1, optimization='sgd'):
     """
         Perform cross validation to find the best lambda (regulariser) and gamma (learning rate).
         
@@ -165,6 +167,8 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, i
                 - RMSE according for the different values of the hyperparameters
     """
 
+    print("Beginning cross-validation")
+    
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
 
@@ -182,11 +186,13 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, i
             rmse_te_tmp = []
             rmse_tr_tmp = []
             
+            print(f"Perform cross-validation for lambda={lambda_:.4f} and gamma={gamma:.4f}")
             # Perform the cross validation
             for k in range(k_fold):
                 rmse_training, rmse_test  = cross_validation_one_step(y, tx, initial_w, k_indices,
                                                                       k, max_iters, gamma, lambda_,
                                                  compute_loss, compute_gradient, optimization, batch_size)
+                
                 rmse_te_tmp.append(rmse_test)
                 rmse_tr_tmp.append(rmse_training)
 
@@ -199,7 +205,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, i
         cross_validation_visualization(lambdas, rmse_tr, rmse_te)
     
     # Find the best arugments 
-    argmin = rmse_te.argmin()
+    argmin = rmse_te.argmax()
     best_lam_ind = argmin // nb_gammas
     best_gam_ind = argmin % nb_gammas
 
