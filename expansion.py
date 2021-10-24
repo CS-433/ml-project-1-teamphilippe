@@ -21,6 +21,20 @@ def build_expansion(data):
     return all_columns_com
 
 def add_sin_cos(data, columns):
+    """
+        Augment the collection of features with combination of sin and cos functions applied to all the features
+        
+        Parameters
+        ----------
+            data :
+                Data matrix
+            columns :
+                List of the indexes of the columns to use to in the sin and cos expansion
+        
+        Return
+        ------
+            New data matrix augmented with new combinations of features
+    """
     cols = columns.copy()
     cols.append(0)
     comb = list(itertools.combinations_with_replacement(cols, 2))
@@ -34,6 +48,21 @@ def add_sin_cos(data, columns):
     return data
 
 def power_exp(data, max_degree, base_cols=list(range(1,24))):
+    """
+        Power expansion of the data matrix passed as argument
+        
+        Parameters
+        ----------
+            data :
+                Data matrix
+            max_degree :
+                Maximum degree to use in the power expansion
+            base_cols :
+                List of the indexes of the columns to use in the power expansion
+        Return
+        ------
+            New augmented data matrix
+    """
     for i in range(1,max_degree+1):
         base_cols_powered = data[:,base_cols]**i
         data = np.concatenate((data, base_cols_powered), axis=1)
