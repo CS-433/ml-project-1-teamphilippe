@@ -21,15 +21,23 @@ def build_expansion(data):
     return all_columns_com
 
 def add_sin_cos(data, columns):
-
-    combinations = np.array(list(itertools.combinations_with_replacement(columns, 2)))
+    cols = columns.copy()
+    cols.append(0)
+    comb = list(itertools.combinations_with_replacement(cols, 2))
+    comb.remove((0,0))
+    
+    combinations = np.array(comb)
     # Construct the product of every pair of columns in the dataset
     all_columns_com = np.cos(data[:,combinations[:,0]]) *np.sin(data[:,combinations[:,1]])
     
     data = np.concatenate((data, all_columns_com), axis=1)
     return data
 
-
+def power_exp(data, max_degree, base_cols=list(range(1,24))):
+    for i in range(1,max_degree+1):
+        base_cols_powered = data[:,base_cols]**i
+        data = np.concatenate((data, base_cols_powered), axis=1)
+    return data
 
 def add_bias_term(data):
     """
