@@ -74,7 +74,7 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
 
 
 
-def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training, below_lim_training, angle_cols, max_degree, expansion=True):
+def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, angle_cols, max_degree, expansion=True):
     """
     Load and pre-process test set 
     Parameters
@@ -91,12 +91,12 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
     
     # Apply pre-processing
     x_te_cleaned,_ = remove_col_default_values(x_test, cols_to_remove=col_removed_training)
-    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned)
     x_te_cleaned,_ = replace_by_default_value(x_te_cleaned, default_values_training)
+    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned)
     x_te_cleaned, _, _ = clip_IQR(x_te_cleaned, above_lim=above_lim_training, below_lim = below_lim_training)
     
     # Standardise the matrix and expand it
-    x_te_cleaned, _, _ = standardize(x_te_cleaned)
+    x_te_cleaned = (x_te_cleaned - means) / stds
     if expansion:
         x_te_cleaned = add_bias_term(x_te_cleaned)
         x_te_cleaned = add_sin_cos(x_te_cleaned, angle_cols)
@@ -137,6 +137,9 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 - Predicted labels on the given local test set
                 - Optimal weights found
     """
+    # Default value for regularizer coefficient if not used
+    best_lambda = 0
+    
     if model in ['logistic_regression', 'reg_logistic_regression']:
         if model == 'logistic_regression':
             # Lambdas = [0.0] as we do not need to find lambda (not used in logistic regression)
@@ -222,10 +225,10 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
         # Predict the labels on the local test set
         y_hat_te = predict_labels(w, x_te)
 
-    return y_hat_te, w, loss_mse,best_degree 
+    return y_hat_te, w, loss_mse, best_degree, best_lambda
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 0, 25), gammas=0.0095, max_degree=9):
+def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 0, 25), gammas=0.0095, max_degree=7):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -257,13 +260,11 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
     
     # Standardize all the features
-    x_tr, _, _ = standardize(x_tr)
-    x_te, _, _ = standardize(x_te)
+    x_tr, means, stds = standardize(x_tr)
+    x_te = (x_te - means) / stds
     
     x_tr = add_bias_term(x_tr)
     x_te = add_bias_term(x_te)
-    
-    
     
     if(model in ['logistic_regression', 'reg_logistic_regression']):
         # As explained on the forum, the input for the logistic regression should have label in {0,1}
@@ -282,7 +283,7 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     print("End of processing + expansion")
     print("Beginning training")
         
-    y_hat_te, w_opti, loss_mse, best_degree = train_and_predict(y_tr, x_tr, y_te, x_te, 
+    y_hat_te, w_opti, loss_mse, best_degree, best_lambda = train_and_predict(y_tr, x_tr, y_te, x_te, 
                                                     model, seed, max_iters, lambdas, max_degree, gammas)
     
     # Compute the accuracy on the local test set
@@ -291,4 +292,4 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     
     print(f'Accuracy of {model} on the local test set : {accuracy_test:.4f}')
     print(f'F1-score of {model} on the local test set : {f1_test:.4f}')
-    return accuracy_test, f1_test, w_opti, best_degree
+    return accuracy_test, f1_test, w_opti, best_degree, best_lambda

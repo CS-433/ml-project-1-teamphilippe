@@ -3,7 +3,7 @@
 import numpy as np
 from proj1_helpers import *
 
-def check_all_azimuth_angles(x):
+def check_all_azimuth_angles(x, cols_angle):
     """
     This function check that all the angle valued columns are in the range [-pi,pi[
     
@@ -16,10 +16,9 @@ def check_all_azimuth_angles(x):
         x : 
             The cleaned dataset 
     """
-    x = check_azimuth_and_rerange(x, 11)
-    x = check_azimuth_and_rerange(x, 14)
-    x = check_azimuth_and_rerange(x, 16)
-    x = check_azimuth_and_rerange(x, 21)
+    for col in cols_angle:
+        x = check_azimuth_and_rerange(x, col)
+    
     return x
 
 # Replace the remaining -999 by the median/mean/0s

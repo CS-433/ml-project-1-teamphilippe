@@ -136,10 +136,10 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree,  c
     acc_test = compute_accuracy(y_test_cv, predict_labels(w, x_test_cv))
     acc_train = compute_accuracy(y_train_cv, predict_labels(w, x_train_cv))
     
-    #loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
-    #return compute_rmse(loss_tr), compute_rmse(loss_te)
+    loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
+    return compute_rmse(loss_tr), compute_rmse(loss_te)
     
-    return acc_train, acc_test
+    #return acc_train, acc_test
     
 def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, lambdas, max_degree, gamma=0.0,
                              k_fold=8, seed=1, batch_size=1, optimization='sgd'):
@@ -191,7 +191,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
     acc_tr = np.zeros((nb_lambdas, max_degree))
 
     # iterate over all (gamma, lambda) pairs
-    for ind_deg, deg in enumerate(range(4,max_degree+1)):
+    for ind_deg, deg in enumerate(range(2, max_degree+1)):
         for ind_lambda, lambda_ in enumerate(lambdas):
             # List to store the loss for the current lambda and gamma pairs
             acc_tr_tmp = []

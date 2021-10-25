@@ -66,6 +66,7 @@ def power_exp(data, max_degree, base_cols=list(range(1,24))):
     for i in range(1,max_degree+1):
         base_cols_powered = data[:,base_cols]**i
         data = np.concatenate((data, base_cols_powered), axis=1)
+
     return data
 
 def add_bias_term(data):
