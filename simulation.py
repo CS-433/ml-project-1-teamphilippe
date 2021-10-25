@@ -92,14 +92,17 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
     # Apply pre-processing
     x_te_cleaned,_ = remove_col_default_values(x_test, cols_to_remove=col_removed_training)
     x_te_cleaned,_ = replace_by_default_value(x_te_cleaned, default_values_training)
-    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned)
+    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned, angle_cols)
     x_te_cleaned, _, _ = clip_IQR(x_te_cleaned, above_lim=above_lim_training, below_lim = below_lim_training)
     
     # Standardise the matrix and expand it
     x_te_cleaned = (x_te_cleaned - means) / stds
     if expansion:
         x_te_cleaned = add_bias_term(x_te_cleaned)
-        x_te_cleaned = add_sin_cos(x_te_cleaned, angle_cols)
+        
+        # Need to increment the indexes of angle features since we added
+        # the bias term
+        x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(angle_cols) + 1)
         x_te_cleaned = build_expansion(x_te_cleaned)
         x_te_cleaned = power_exp(x_te_cleaned, max_degree)
     
@@ -273,6 +276,9 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     else:
         # If we do not a logistic regression model, we can do polynomial expansion in the input features
         # Running time is too slow to do this with logistic regression
+        # Need to increment indexes of angles features since
+        # we added a bias term at the beginning
+        angle_cols = np.array(angle_cols) + 1
         x_tr = add_sin_cos(x_tr, angle_cols)
         x_te = add_sin_cos(x_te, angle_cols)
         

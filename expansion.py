@@ -35,16 +35,8 @@ def add_sin_cos(data, columns):
         ------
             New data matrix augmented with new combinations of features
     """
-    cols = columns.copy()
-    cols.append(0)
-    comb = list(itertools.combinations_with_replacement(cols, 2))
-    comb.remove((0,0))
     
-    combinations = np.array(comb)
-    # Construct the product of every pair of columns in the dataset
-    all_columns_com = np.cos(data[:,combinations[:,0]]) *np.sin(data[:,combinations[:,1]])
-    
-    data = np.concatenate((data, all_columns_com), axis=1)
+    data = np.concatenate((data, np.cos(data[:, columns]), np.sin(data[:, columns])), axis=1)
     return data
 
 def power_exp(data, max_degree, base_cols=list(range(1,24))):

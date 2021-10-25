@@ -1,7 +1,11 @@
 from proj1_helpers import *
+from cleaning import *
+from simulation import process_test_set
+from expansion import *
+from implementations import ridge_regression
 
 """
-Script that
+Script that :
     - loads the training data
     - train the model with the best hyperparameters found during the cross-validation (done in the notebook "project1")
     - make predictions on the test set
@@ -13,7 +17,7 @@ def load_and_preprocess_training_data(best_degree, cols_angle):
     training_data_path = "data/train.csv"
     
     # Load the training data
-    y, x, ids = load_csv_data(data_path, sub_sample=False)
+    y, x, ids = load_csv_data(training_data_path, sub_sample=False)
     
     # Remove the features where more than half of the rows are -999
     x_cleaned, col_removed_training = remove_col_default_values(x)
@@ -32,7 +36,9 @@ def load_and_preprocess_training_data(best_degree, cols_angle):
     
     # Expand the features
     x_cleaned = add_bias_term(x_cleaned)
-    x_cleaned = add_sin_cos(x_cleaned, cols_angle)
+    
+    # Increment indexes of angles features since we added a bias term
+    x_cleaned = add_sin_cos(x_cleaned, np.array(cols_angle) + 1)
     x_cleaned = build_expansion(x_cleaned)
     
     # Polynomial expansion with the best degree found
@@ -55,30 +61,31 @@ def main():
     # Best hyperparameters found (lambda and degree
     # of the polynomials expansion) during the cross validation done
     # in the notebook "project1".
-    best_lambda = None
-    best_degree = None
+    best_lambda = 1e-15
+    best_degree = 4
     
-    print('Loading and preprocessing training data...')
+    print('==> Loading and preprocessing training data...\n')
     # Load and preprocess training data
     x_tr, y_tr, means, stds, col_removed_training, default_values_training, above_lim_training, below_lim_training = load_and_preprocess_training_data(best_degree, cols_angle)
     
-    print('Training model...')
+    print('\n==> Training model...\n')
     # Train the model
     w, loss_mse = ridge_regression(y_tr, x_tr, best_lambda)
     
-    print('Loading and preprocessing test data...')
+    print('==> Loading and preprocessing test data...\n')
     # Load and preprocess test set
     x_te_cleaned, ids_test, y_test = load_and_preprocess_test_data(col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, cols_angle, best_degree)
     
-    print('Predicting labels for the test set...')
+    print('\n==> Predicting labels for the test set...\n')
     # Make predictions for the test set
-    y_test_pred = predict_labels(w_best, x_te_cleaned)
+    y_test_pred = predict_labels(w, x_te_cleaned)
     
-    print('Creating submission file...')
+    print('==> Creating submission file...\n')
     # Save the submission file
     create_csv_submission(ids_test, y_test_pred, 'submission.csv')
     
-    print(f'Submission files saved.')
-    
+    print('==> Submission files saved.')
+
+
 if __name__ == '__main__':
     main()
