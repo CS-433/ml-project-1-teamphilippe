@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 
+
 def build_expansion(data):
     """
     Build the a data matrix composed of product of every pair of columns
@@ -11,14 +12,15 @@ def build_expansion(data):
     Returns
     -------
         all_columns_com : 
-            A new dataset composed of product of every pair of columns 
-    
+            A new dataset composed of product of every pair of columns
     """
     # Build all possible pairs of number up to n=data.shape[1]
-    combinations = np.array(list(itertools.combinations_with_replacement(range(data.shape[1]),2)))
+    combinations = np.array(list(itertools.combinations_with_replacement(range(data.shape[1]), 2)))
+
     # Construct the product of every pair of columns in the dataset
-    all_columns_com = data[:,combinations[:,0]] *data[:,combinations[:,1]]
+    all_columns_com = data[:, combinations[:, 0]] * data[:, combinations[:, 1]]
     return all_columns_com
+
 
 def add_sin_cos(data, columns):
     """
@@ -35,11 +37,11 @@ def add_sin_cos(data, columns):
         ------
             New data matrix augmented with new combinations of features
     """
-    
     data = np.concatenate((data, np.cos(data[:, columns]), np.sin(data[:, columns])), axis=1)
     return data
 
-def power_exp(data, max_degree, base_cols=list(range(1,24))):
+
+def power_exp(data, max_degree, base_cols=list(range(1, 24))):
     """
         Power expansion of the data matrix passed as argument
         
@@ -55,11 +57,12 @@ def power_exp(data, max_degree, base_cols=list(range(1,24))):
         ------
             New augmented data matrix
     """
-    for i in range(1,max_degree+1):
-        base_cols_powered = data[:,base_cols]**i
+    for i in range(1, max_degree + 1):
+        base_cols_powered = data[:, base_cols] ** i
         data = np.concatenate((data, base_cols_powered), axis=1)
 
     return data
+
 
 def add_bias_term(data):
     """
@@ -74,5 +77,4 @@ def add_bias_term(data):
             The dataset with a column of 1 
     
     """
-    data_with_bias = np.hstack((np.ones((data.shape[0],1)),data))
-    return data_with_bias
+    return np.hstack((np.ones((data.shape[0], 1)), data))

@@ -1,7 +1,12 @@
-from metrics import sigmoid 
+import numpy as np
+from metrics import sigmoid
+
 """
 Logistic regression related functions
 """
+
+
+# Logistic regression
 def compute_gradient_logistic_regression(y, tx, w, *args):
     """
         Function that computes the gradient of weight vector w in the case of the logistic regression
@@ -20,14 +25,15 @@ def compute_gradient_logistic_regression(y, tx, w, *args):
             
     """
     # Sigmoid function used in the logistic regression
-    sigm = sigmoid(tx@w)
+    sigm = sigmoid(tx @ w)
     return tx.T @ (sigm - y)
 
 
 def compute_loss_logistic_regression(y, tx, w, *args):
     """
         Function that compute the loss of the weight vector w in the case of the logistic regression
-        Note that the loss is the average loss over the whole dataset to allow comparison between datasets with different number of items.
+        Note that the loss is the average loss over the whole dataset to allow comparison between datasets
+        with different number of items.
         Parameters
         ----------
             y :
@@ -36,7 +42,7 @@ def compute_loss_logistic_regression(y, tx, w, *args):
                 Data points
             w :
                 Potential weight vector used to compute the loss
-        Returns 
+        Returns
         -------
             Loss of the weight vector, using the logistic regression method, computed with the parameters
     """
@@ -47,7 +53,7 @@ def compute_loss_logistic_regression(y, tx, w, *args):
 # Regularized logistic regression
 def compute_loss_reg_logistic_regression(y, tx, w, lambda_):
     """
-        Function that compute the loss of the weight vector w in the case of the regularized logistic regression
+        Function that compute the loss of the weight vector w in the case of the regularised logistic regression
         
         Parameters
         ----------
@@ -58,17 +64,17 @@ def compute_loss_reg_logistic_regression(y, tx, w, lambda_):
             w :
                 Potential weight vector used to compute the loss
             lambda_ :
-                Regularizer of this regularized logistic regression
+                Regulariser of this regularized logistic regression
         Returns 
         -------
-            Loss of the weight vector, using the regularized logistic regression method, computed with the parameters
+            Loss of the weight vector, using the regularised logistic regression method, computed with the parameters
     """
     return compute_loss_logistic_regression(y, tx, w)
 
 
 def compute_gradient_reg_logistic_regression(y, tx, w, lambda_):
     """
-        Function that computes the gradient of the wieght vector w in the case of the regularized logistic regression
+        Function that computes the gradient of the weight vector w in the case of the regularised logistic regression
         
         Parameters 
         ----------
@@ -79,19 +85,20 @@ def compute_gradient_reg_logistic_regression(y, tx, w, lambda_):
             w :
                 Potential weight vector used to compute the gradient
             lambda_ :
-                Regularizer of this regularized logistic regression
+                Regulariser of this regularized logistic regression
         Returns 
         -------
-            Gradient, using the regularized logistic regression method, computed with the parameters
+            Gradient, using the regularised logistic regression method, computed with the parameters
             
     """
     return compute_gradient_logistic_regression(y, tx, w) + 2 * lambda_ * w
 
 
-
 """
 Least squares related functions
 """
+
+
 def compute_loss_least_squares(y, tx, w, *args):
     """
         Function that compute the loss of the weight vector according to the least square method
@@ -150,7 +157,7 @@ def compute_gradient_ridge_regression(y, tx, w, lambda_):
             w :
                 Potential weight vector used to compute the gradient
             lambda_ :
-                Regularizer of this ridge regression
+                Regulariser of this ridge regression
         Returns 
         -------
             Gradient of the weight vector, using the ridge regression method, computed with the parameters
@@ -171,10 +178,9 @@ def compute_loss_ridge(y, tx, w, lambda_):
             w :
                 Potential weight vector used to compute the gradient
             lambda_ :
-                Regularizer of this ridge regression
+                Regulariser of this ridge regression
         Returns 
         -------
             Loss of the weight vector, using the ridge regression method, computed with the parameters
     """
     return compute_loss_least_squares(y, tx, w)
-

@@ -14,8 +14,8 @@ def load_csv_data(data_path, sub_sample=False):
 
     # convert class labels from strings to binary (-1,1)
     yb = np.ones(len(y))
-    yb[np.where(y=='b')] = -1
-    
+    yb[np.where(y == 'b')] = -1
+
     # sub-sample
     if sub_sample:
         yb = yb[::50]
@@ -38,13 +38,13 @@ def predict_labels(weights, data):
     -------
         y_pred : 
             The predictions
-    
     """
     y_pred = np.dot(data, weights)
     y_pred[np.where(y_pred <= 0)] = -1
     y_pred[np.where(y_pred > 0)] = 1
-    
+
     return y_pred
+
 
 def create_csv_submission(ids, y_pred, name):
     """
@@ -58,11 +58,13 @@ def create_csv_submission(ids, y_pred, name):
         writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
         writer.writeheader()
         for r1, r2 in zip(ids, y_pred):
-            writer.writerow({'Id':int(r1),'Prediction':int(r2)})
-            
+            writer.writerow({'Id': int(r1), 'Prediction': int(r2)})
+
+
 def predict_labels_logistic_regression(weights, x):
     """
-        Function that computes the predictions for the given data of the logistic regression model with given the weights
+        Function that computes the predictions for the given data of the logistic regression model
+        with the given weights
         
         Parameters 
         ----------
@@ -73,7 +75,6 @@ def predict_labels_logistic_regression(weights, x):
         Returns 
         -------
             Predicted labels of the model for the given data
-            
     """
     y = 1 / (1 + np.exp(- x @ weights))
 
@@ -109,6 +110,5 @@ def split_data(x, y, ratio, seed=1):
     # set seed
     np.random.seed(seed)
     idx = np.random.choice(y.shape[0], int(ratio * y.shape[0]), replace=False)
-    
-    return x[idx], y[idx], np.delete(x, idx, axis=0), np.delete(y, idx, axis=0)
 
+    return x[idx], y[idx], np.delete(x, idx, axis=0), np.delete(y, idx, axis=0)

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-from proj1_helpers import *
-from loss import * 
+from loss import *
 from metrics import *
 
 """
@@ -63,6 +61,7 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
     return stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss_least_squares,
                                        compute_gradient_least_squares)
 
+
 def least_squares(y, tx):
     """
         Calculate the solution of the least square equation
@@ -73,7 +72,6 @@ def least_squares(y, tx):
                     Outputs of the data points
             tx :
                 Data points
-
         Returns
         -------
             Tuple :
@@ -83,6 +81,7 @@ def least_squares(y, tx):
     w = np.linalg.solve(tx.T @ tx, tx.T @ y)
 
     return w, compute_loss_least_squares(y, tx, w)
+
 
 def ridge_regression(y, tx, lambda_):
     """
@@ -95,12 +94,11 @@ def ridge_regression(y, tx, lambda_):
             tx :
                 Data points
             lambda_ :
-                Regularizer of the regularised least square method
-            
+                Regulariser of the regularised least square method
         Returns
         -------
             Tuple :
-                - Optimal weight vector which is the solution to the regularized least square equation
+                - Optimal weight vector which is the solution to the regularised least square equation
                 - Its corresponding loss using the reguralized least square method
     """
     w = np.linalg.solve(tx.T @ tx + np.identity(tx.shape[1]) * lambda_ * 2 * tx.shape[0], tx.T @ y)
@@ -136,7 +134,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """
-        Function that compute the stochastic gradient descent of the regularized logistic regression
+        Function that compute the stochastic gradient descent of the regularised logistic regression
         
         Parameters
         ----------
@@ -144,6 +142,8 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
                 Outputs of the data points
             tx :
                 Data points
+            lambda_ :
+                Coefficient of the
             initial_w :
                 Initial weight vector used to compute the gradient
             max_iters :
@@ -153,7 +153,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
         Returns 
         -------
             Tuple :
-                - Optimal weight vector of the regularized logistic regression
+                - Optimal weight vector of the regularised logistic regression
                 - Its corresponding loss
     """
     return stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss_reg_logistic_regression,
@@ -163,6 +163,8 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
 """
 Functions used for Stochastic Gradient Descent
 """
+
+
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
     This function was given as part of the exercice 2.
@@ -213,7 +215,7 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
             compute_gradient:
                 Function to use to compute the gradient of the weight vector
             lambda_ :
-                The importance of the regularizer
+                The importance of the regulariser
             batch_size :
                 Size of the batch to use in the stochastic gradient descent
         Returns 
@@ -243,5 +245,5 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
 
         # store loss
         losses.append(loss)
-        
+
     return w, losses[-1]

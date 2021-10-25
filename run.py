@@ -14,6 +14,26 @@ Script that :
 
 
 def load_and_preprocess_training_data(best_degree, cols_angle):
+    """
+        Load and preprocess the training data
+        Parameters
+        ----------
+            best_degree :
+                Best degree found for the polynomial expansion
+            cols_angle :
+                Indexes of the features representing angles
+        Returns
+        -------
+        Tuple :
+            - Cleaned training dataset
+            - Labels
+            - Means of each features used for standardisation
+            - Stds of each features used for standardisation
+            - Features that were removed during cleaning
+            - Default values for features used during cleaning
+            - Upper limit to remove the outliers considered during cleaning
+            - Lower limit to remove the outliers considered during cleaning
+    """
     training_data_path = "data/train.csv"
     
     # Load the training data
@@ -47,11 +67,39 @@ def load_and_preprocess_training_data(best_degree, cols_angle):
     return x_cleaned, y, means, stds, col_removed_training, default_values_training, above_lim_training, below_lim_training
 
 
-def load_and_preprocess_test_data(col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, cols_angle, best_degree):
-    
+def load_and_preprocess_test_data(col_removed_training, default_values_training,
+                                  above_lim_training, below_lim_training, means, stds, cols_angle, best_degree):
+    """
+        Load and preprocess the test dataset
+        Parameters
+        ----------
+            col_removed_training :
+                Features removed in the training set
+            default_values_training :
+                Default values of features used in the training set
+            above_lim_training :
+                Upper limit of outliers used in the training set
+            below_lim_training :
+                Lower limit of outliers used in the training set
+            means :
+                Means used to standardise the features in the training set
+            stds :
+                Stds used to standardise the features in the training set
+            cols_angle :
+                Indexes of the features representing angles
+            best_degree :
+                Best degree found for the polynomial expansion
+        Returns
+        -------
+            Tuple :
+                - Cleaned test dataset
+                - Ids of the test samples
+                - Labels of the test samples
+    """
     test_path = 'data/test.csv'
     
-    return process_test_set(test_path, col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, cols_angle, best_degree)
+    return process_test_set(test_path, col_removed_training, default_values_training,
+                            above_lim_training, below_lim_training, means, stds, cols_angle, best_degree)
 
 
 def main():
@@ -66,7 +114,8 @@ def main():
     
     print('==> Loading and preprocessing training data...\n')
     # Load and preprocess training data
-    x_tr, y_tr, means, stds, col_removed_training, default_values_training, above_lim_training, below_lim_training = load_and_preprocess_training_data(best_degree, cols_angle)
+    x_tr, y_tr, means, stds, col_removed_training, default_values_training, above_lim_training, below_lim_training = \
+        load_and_preprocess_training_data(best_degree, cols_angle)
     
     print('\n==> Training model...\n')
     # Train the model
@@ -74,7 +123,9 @@ def main():
     
     print('==> Loading and preprocessing test data...\n')
     # Load and preprocess test set
-    x_te_cleaned, ids_test, y_test = load_and_preprocess_test_data(col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, cols_angle, best_degree)
+    x_te_cleaned, ids_test, y_test = load_and_preprocess_test_data(col_removed_training, default_values_training,
+                                                                   above_lim_training, below_lim_training,
+                                                                   means, stds, cols_angle, best_degree)
     
     print('\n==> Predicting labels for the test set...\n')
     # Make predictions for the test set
