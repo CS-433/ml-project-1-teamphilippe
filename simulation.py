@@ -197,6 +197,14 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                                                       compute_loss_least_squares, compute_gradient_least_squares)
 
         elif model == 'least_squares':
+            # Cross validation only to find a good learning rate gamma (lambda is not used in least_squares)
+            _, best_degree = perform_cross_validation(
+                y_tr, x_tr,
+                compute_loss_least_squares, compute_gradient_least_squares, 
+                max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed)
+            
+            x_tr = power_exp(x_tr, best_degree)
+            
             # Find the least squares solution via the normal equation
             w, loss_mse = least_squares(y_tr, x_tr)
 

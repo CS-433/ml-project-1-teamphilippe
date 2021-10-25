@@ -72,7 +72,7 @@ def cross_validation_visualization(lambdas, max_degree, acc_te):
     plt.legend(loc=2)
     plt.show()
     
-def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree,  compute_loss, compute_gradient,
+def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, gamma,  compute_loss, compute_gradient,
                               optimization='sgd', batch_size=1):
     """
         Perform one step of the cross validation :
@@ -201,7 +201,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
             # Perform the cross validation
             for k in range(k_fold):
                 acc_training, acc_test  = cross_validation_one_step(y, tx, k_indices,
-                                                                      k, max_iters, lambda_, deg,
+                                                                      k, max_iters, lambda_, deg, gamma,
                                                  compute_loss, compute_gradient, optimization, batch_size)
                 
                 acc_te_tmp.append(acc_test)
