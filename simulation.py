@@ -20,8 +20,10 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
                 Outputs of the data points
             tx :
                 Data points
-            initial_w :
-                Initial weight vector used to compute the gradient
+            y_te:
+                Outputs of test data points
+            x_te:
+                Test data points
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
             gamma :
@@ -45,8 +47,6 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
     # Define parameters to store w and loss
     losses = []
     losses_test = []
-    
-    #data_augm = 
 
     # start of the stochastic gradient descent
     for n_iter in range(max_iters):
@@ -62,7 +62,7 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
             # Gradient Descent
             w = w - gamma * sgrad
 
-        # store losses
+        # store losses for both test and train set 
         losses.append(loss)
         losses_test.append(loss_te)
         
@@ -116,18 +116,20 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 Outputs of the training data points
             x_tr :
                 Training data points
+            y_te:
+                Ouputs of the test data points
             x_te :
                 Test data points
             model :
                 String, model to use
             seed :
                 Seed to initialize the RNG
-            initial_w :
-                Initial weights
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
             lambdas :
                 The different coefficients to try in the cross validation
+            max_degree:
+                The maximal degree to which we should try power expansion
             gammas :
                 The different learning rates to try in the cross validation
 
@@ -136,6 +138,8 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
         Tuple :
                 - Predicted labels on the given local test set
                 - Optimal weights found
+                - Loss on the test set 
+                - The best degree for power expansion
     """
     if model in ['logistic_regression', 'reg_logistic_regression']:
         if model == 'logistic_regression':
@@ -230,7 +234,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
         # Predict the labels on the local test set
         y_hat_te = predict_labels(w, x_te)
 
-    return y_hat_te, w, loss_mse,best_degree 
+    return y_hat_te, w, loss_mse, best_degree 
 
 
 def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 0, 25), gammas=0.0095, max_degree=9):
@@ -249,17 +253,23 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
                 Seed to initialize the RNG
             ratio_split_tr :
                 Ratio of samples to keep in the training set
+            angle_cols: 
+                The column number of angle features
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
             lambdas :
                 The different coefficients to try in the cross validation
             gammas :
                 The different learning rates to try in the cross validation
+            max_degree: 
+                The maximal degree to which we should try polynomial expansion
         Returns
         -------
         Tuple :
             - The accuracy of the model on the local test set
+            - F1 score of the model on the test set 
             - Optimal weights found
+            - The best degree for polynomial expansion
     """
     # Split the training set into a local training set and a local test set
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
@@ -270,8 +280,6 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     
     x_tr = add_bias_term(x_tr)
     x_te = add_bias_term(x_te)
-    
-    
     
     if(model in ['logistic_regression', 'reg_logistic_regression']):
         # As explained on the forum, the input for the logistic regression should have label in {0,1}
@@ -299,4 +307,5 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     
     print(f'Accuracy of {model} on the local test set : {accuracy_test:.4f}')
     print(f'F1-score of {model} on the local test set : {f1_test:.4f}')
+    
     return accuracy_test, f1_test, w_opti, best_degree
