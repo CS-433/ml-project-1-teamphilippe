@@ -4,6 +4,7 @@ import numpy as np
 from proj1_helpers import *
 from loss import * 
 from metrics import *
+import matplotlib.pyplot as plt
 
 """
 Functions to optimise weights using different methods
@@ -227,21 +228,20 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
     # Define parameters to store w and loss
     losses = []
     w = initial_w
-
     # start of the stochastic gradient descent
     for n_iter in range(max_iters):
-        # compute the loss of the corresponding optimal weight vector
-        loss = compute_loss(y, tx, w, lambda_)
-
         # start of the compute of the stochastic gradient for the weight vector candidate
-        for y_, tx_ in batch_iter(y, tx, batch_size=batch_size):
+        for y_, tx_ in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
             # stochastic gradient with particular batch of data points and its corresponding outputs
             sgrad = compute_gradient(y_, tx_, w, lambda_)
-
             # Gradient Descent
             w = w - gamma * sgrad
+            # compute the loss of the corresponding optimal weight vector
+            loss = compute_loss(y, tx, w, lambda_)
 
         # store loss
         losses.append(loss)
         
+    plt.plot(losses)
+    plt.show()
     return w, losses[-1]

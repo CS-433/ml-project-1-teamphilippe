@@ -21,6 +21,29 @@ def check_all_azimuth_angles(x, cols_angle):
     
     return x
 
+
+def check_azimuth_and_rerange(x, col_idx):
+    """
+    Check and clip if the values of azimuthal columns are in the range [-pi, pi[
+    Parameters
+    ----------
+        x : 
+            The dataset from which we want to check the angle vlaues
+        col_idx:
+            The column that needs to be check
+    Returns
+    -------
+        x : 
+            The checked dataset 
+    """
+    # Check if the value is in the range
+    mask = (x[:, col_idx] >= np.pi) | (x[:, col_idx] < -np.pi)
+    print(f'Number of values outside [-pi;pi[ (col {col_idx}): {np.sum(mask)}')
+    
+    # Set the non valid azimuths back in the [-pi;pi[ interval
+    x[mask, col_idx] = (x[mask, col_idx] % (2 * np.pi)) - np.pi
+    return x
+
 # Replace the remaining -999 by the median/mean/0s
 def replace_by_default_value(x, default_values = None):
     """
@@ -121,27 +144,6 @@ def clip_IQR(x, k=1.5, percentiles=[25, 75], above_lim = None, below_lim = None)
     return x, above_lim, below_lim
 
 # 
-def check_azimuth_and_rerange(x, col_idx):
-    """
-    Check and clip if the values of azimuthal columns are in the range [-pi, pi[
-    Parameters
-    ----------
-        x : 
-            The dataset from which we want to check the angle vlaues
-        col_idx:
-            The column that needs to be check
-    Returns
-    -------
-        x : 
-            The checked dataset 
-    """
-    # Check if the value is in the range
-    mask = (x[:, col_idx] >= np.pi) | (x[:, col_idx] < -np.pi)
-    print(f'Number of values outside [-pi;pi[ (col {col_idx}): {np.sum(mask)}')
-    
-    # Set the non valid azimuths back in the [-pi;pi[ interval
-    x[mask, col_idx] = (x[mask, col_idx] % (2 * np.pi)) - np.pi
-    return x
 
 def remove_col_default_values(x, cols_to_remove = None):
     """
@@ -200,9 +202,9 @@ def standardize(x):
         std_x :
             Standard deviation of x before standardization
     """
-    mean_x = np.mean(x)
-    x = x - mean_x
-    std_x = np.std(x)
-    x = x / std_x
+    mean_x = np.mean(x, axis=0)
+    std_x = np.std(x, axis=0)
+    x = (x - mean_x)/std_x
+    
     return x, mean_x, std_x
    

@@ -47,24 +47,25 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
     # Define parameters to store w and loss
     losses = []
     losses_test = []
+    
+    w = np.zeros(tx.shape[1])
 
     # start of the stochastic gradient descent
     for n_iter in range(max_iters):
-        # compute the loss of the corresponding optimal weight vector on the training and test sets
-        loss = compute_loss(y, tx, w, lambda_)
-        loss_te = compute_loss(y_te, x_te, w, lambda_)
-
         # start of the compute of the stochastic gradient for the weight vector candidate
-        for y_, tx_ in batch_iter(y, tx, batch_size=batch_size):
+        for y_, tx_ in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
             # stochastic gradient with particular batch of data points and its corresponding outputs
             sgrad = compute_gradient(y_, tx_, w, lambda_)
 
             # Gradient Descent
             w = w - gamma * sgrad
+            # compute the loss of the corresponding optimal weight vector on the training and test sets
+            loss = compute_loss(y, tx, w, lambda_)
+            loss_te = compute_loss(y_te, x_te, w, lambda_)
 
-        # store losses for both test and train set
-        losses.append(loss)
-        losses_test.append(loss_te)
+            # store losses for both test and train set
+            losses.append(loss)
+            losses_test.append(loss_te)
         
     # Plot the test and training losses to see the convergence
     plt.plot(losses)
@@ -74,7 +75,7 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
 
 
 
-def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, angle_cols, max_degree, expansion=True):
+def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training, below_lim_training, means, stds, cols_angle, best_degree,expansion=True):
     """
     Load and pre-process test set 
     Parameters
@@ -92,7 +93,7 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
     # Apply pre-processing
     x_te_cleaned,_ = remove_col_default_values(x_test, cols_to_remove=col_removed_training)
     x_te_cleaned,_ = replace_by_default_value(x_te_cleaned, default_values_training)
-    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned, angle_cols)
+    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned, cols_angle)
     x_te_cleaned, _, _ = clip_IQR(x_te_cleaned, above_lim=above_lim_training, below_lim = below_lim_training)
     
     # Standardise the matrix and expand it
@@ -102,9 +103,9 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
 
         # Need to increment the indexes of angle features since we added
         # the bias term
-        x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(angle_cols) + 1)
+        x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(cols_angle) + 1)
         x_te_cleaned = build_expansion(x_te_cleaned)
-        x_te_cleaned = power_exp(x_te_cleaned, max_degree)
+        x_te_cleaned = power_exp(x_te_cleaned, best_degree)
     
     return x_te_cleaned, ids_test, y_test
 
@@ -157,7 +158,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
 
             x_tr = power_exp(x_tr, best_degree)
             
-            # Train the model with the best parameters on teh local training set + plot the loss curves
+            # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma, 
                                                 compute_loss_logistic_regression, compute_gradient_logistic_regression)
 
@@ -194,7 +195,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                                                      compute_loss_least_squares,compute_gradient_least_squares, batch_size=len(x_tr))
 
         elif model == 'least_squares_SGD':
-            # Cross validation only to find a good learning rate gamma (lambda is not used in least_squares GD)
+            # Cross validation only to find a good learning rate gamma (lambda is not used in least_squares SGD)
             best_lambda, best_degree = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares, 
@@ -211,7 +212,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
             _, best_degree = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares, 
-                max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed)
+                max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed, optimization='least_squares')
             
             x_tr = power_exp(x_tr, best_degree)
             
@@ -243,7 +244,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
     return y_hat_te, w, loss_mse, best_degree, best_lambda
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 0, 25), gammas=0.0095, max_degree=9):
+def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100, lambdas=np.logspace(-14, 0, 20), gammas=0.00095, max_degree=8):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -294,12 +295,11 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     else:
         # If we do not a logistic regression model, we can do polynomial expansion in the input features
         # Running time is too slow to do this with logistic regression
-        x_tr = add_sin_cos(x_tr, angle_cols)
-        x_te = add_sin_cos(x_te, angle_cols)
+        x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
+        x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
         
         x_tr = build_expansion(x_tr)
         x_te = build_expansion(x_te)
-        
     
     print("End of processing + expansion")
     print("Beginning training")

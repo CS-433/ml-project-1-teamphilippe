@@ -1,4 +1,5 @@
 from metrics import sigmoid 
+import numpy as np
 """
 Logistic regression related functions
 """
