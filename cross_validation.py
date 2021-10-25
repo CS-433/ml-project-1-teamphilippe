@@ -112,9 +112,6 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, ga
     x_train_cv = np.delete(x, k_indices[k], axis=0)
     y_train_cv = np.delete(y, k_indices[k], axis=0)
     
-    x_test_cv = power_exp(x_test_cv, degree)
-    x_train_cv = power_exp(x_train_cv, degree)
-    
     initial_w = np.zeros(x_train_cv.shape[1])
 
     # Compute the optimal weights and the loss according to the chosen method
@@ -194,6 +191,8 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
     
     # iterate over all (gamma, lambda) pairs
     for ind_deg, deg in enumerate(range_degree):
+        x_exp = power_exp(tx, deg)
+        
         for ind_lambda, lambda_ in enumerate(lambdas):
             # List to store the loss for the current lambda and gamma pairs
             rmse_tr_tmp = []
@@ -202,7 +201,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
             print(f"Perform cross-validation for lambda={lambda_:.4f} and degree={deg}")
             # Perform the cross validation
             for k in range(k_fold):
-                rmse_train, rmse_test  = cross_validation_one_step(y, tx, k_indices,
+                rmse_train, rmse_test  = cross_validation_one_step(y, x_exp, k_indices,
                                                                       k, max_iters, lambda_, deg, gamma,
                                                  compute_loss, compute_gradient, optimization, batch_size)
                 rmse_tr_tmp.append(rmse_train)
