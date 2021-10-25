@@ -13,6 +13,7 @@ Functions for the cross validation
 def build_k_indices(y, k_fold, seed):
     """
         Randomly sample k groups of indices in the dataset 
+        This method was given in lab 4 of the course
         
         Parameters
         ----------
@@ -29,7 +30,7 @@ def build_k_indices(y, k_fold, seed):
     num_row = y.shape[0]
     interval = int(num_row / k_fold)
 
-    # Fix the seed and get a perfumation of the row indices 
+    # Fix the seed and get a permutation of the row indices 
     np.random.seed(seed)
     indices = np.random.permutation(num_row)
 
@@ -45,12 +46,10 @@ def cross_validation_visualization(lambdas, max_degree, acc_te):
                 optimization
                 lambdas:
                     lambda that were used to compute the loss on the train and test set
-                mse_tr:
+                max_degree:
                     The losses on the train set 
-                mse_te:
+                acc_te:
                     The losses on the test set
-                logy:
-                    True if the plot should be a log-log plot, log-lin plot otherwise
     """
     
     degrees = list(range(1,max_degree+1))
@@ -69,7 +68,6 @@ def cross_validation_visualization(lambdas, max_degree, acc_te):
     plt.xlabel("Degree")
     plt.ylabel("Lambda")
     plt.title("Cross validation")
-    plt.legend(loc=2)
     plt.show()
     
 def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, gamma,  compute_loss, compute_gradient,
@@ -175,8 +173,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
         -------
             Tuple :
                 - Optimal lambda for the required method
-                - Optimal gamma for the required method
-                - RMSE according for the different values of the hyperparameters
+                - Optimal degree for the required method
     """
 
     print("Beginning cross-validation")
@@ -214,9 +211,9 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
     cross_validation_visualization(lambdas, max_degree, acc_te)
     
     # Find the best arugments 
-    argmin = acc_te.argmax()
-    best_lam_ind = argmin // max_degree
-    best_degree = argmin % max_degree +1
+    argmax = acc_te.argmax()
+    best_lam_ind = argmax // max_degree
+    best_degree = argmax % max_degree +1
 
     best_lambda = lambdas[best_lam_ind]
     

@@ -68,7 +68,7 @@ def predict_labels_logistic_regression(weights, x):
         ----------
             weights :
                 Trained weights of the model
-            y :
+            x :
                 Data points
         Returns 
         -------

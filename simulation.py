@@ -20,8 +20,10 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
                 Outputs of the data points
             tx :
                 Data points
-            initial_w :
-                Initial weight vector used to compute the gradient
+            y_te:
+                Outputs of test data points
+            x_te:
+                Test data points
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
             gamma :
@@ -45,8 +47,6 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
     # Define parameters to store w and loss
     losses = []
     losses_test = []
-    
-    #data_augm = 
 
     # start of the stochastic gradient descent
     for n_iter in range(max_iters):
@@ -62,7 +62,7 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
             # Gradient Descent
             w = w - gamma * sgrad
 
-        # store losses
+        # store losses for both test and train set
         losses.append(loss)
         losses_test.append(loss_te)
         
@@ -99,7 +99,7 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
     x_te_cleaned = (x_te_cleaned - means) / stds
     if expansion:
         x_te_cleaned = add_bias_term(x_te_cleaned)
-        
+
         # Need to increment the indexes of angle features since we added
         # the bias term
         x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(angle_cols) + 1)
@@ -119,18 +119,20 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 Outputs of the training data points
             x_tr :
                 Training data points
+            y_te:
+                Ouputs of the test data points
             x_te :
                 Test data points
             model :
                 String, model to use
             seed :
                 Seed to initialize the RNG
-            initial_w :
-                Initial weights
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
             lambdas :
                 The different coefficients to try in the cross validation
+            max_degree:
+                The maximal degree to which we should try power expansion
             gammas :
                 The different learning rates to try in the cross validation
 
@@ -139,10 +141,12 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
         Tuple :
                 - Predicted labels on the given local test set
                 - Optimal weights found
+                - Loss on the test set
+                - The best degree for power expansion
     """
     # Default value for regularizer coefficient if not used
     best_lambda = 0
-    
+
     if model in ['logistic_regression', 'reg_logistic_regression']:
         if model == 'logistic_regression':
             # Lambdas = [0.0] as we do not need to find lambda (not used in logistic regression)
@@ -239,7 +243,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
     return y_hat_te, w, loss_mse, best_degree, best_lambda
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 0, 25), gammas=0.0095, max_degree=7):
+def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100, lambdas=np.logspace(-15, 0, 25), gammas=0.0095, max_degree=9):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -255,17 +259,23 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
                 Seed to initialize the RNG
             ratio_split_tr :
                 Ratio of samples to keep in the training set
+            angle_cols:
+                The column number of angle features
             max_iters :
                 Maximum number of iteration of the stochastic gradient descent
             lambdas :
                 The different coefficients to try in the cross validation
             gammas :
                 The different learning rates to try in the cross validation
+            max_degree:
+                The maximal degree to which we should try polynomial expansion
         Returns
         -------
         Tuple :
             - The accuracy of the model on the local test set
+            - F1 score of the model on the test set
             - Optimal weights found
+            - The best degree for polynomial expansion
     """
     # Split the training set into a local training set and a local test set
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
@@ -276,7 +286,7 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     
     x_tr = add_bias_term(x_tr)
     x_te = add_bias_term(x_te)
-    
+
     if(model in ['logistic_regression', 'reg_logistic_regression']):
         # As explained on the forum, the input for the logistic regression should have label in {0,1}
         y_tr[y_tr == -1.0] = 0.0
@@ -284,9 +294,6 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     else:
         # If we do not a logistic regression model, we can do polynomial expansion in the input features
         # Running time is too slow to do this with logistic regression
-        # Need to increment indexes of angles features since
-        # we added a bias term at the beginning
-        angle_cols = np.array(angle_cols) + 1
         x_tr = add_sin_cos(x_tr, angle_cols)
         x_te = add_sin_cos(x_te, angle_cols)
         
@@ -297,7 +304,7 @@ def run_experiment(y, x, model, seed, ratio_split_tr, angle_cols, max_iters=100,
     print("End of processing + expansion")
     print("Beginning training")
         
-    y_hat_te, w_opti, loss_mse, best_degree, best_lambda = train_and_predict(y_tr, x_tr, y_te, x_te, 
+    y_hat_te, w_opti, loss_mse, best_degree, best_lambda = train_and_predict(y_tr, x_tr, y_te, x_te,
                                                     model, seed, max_iters, lambdas, max_degree, gammas)
     
     # Compute the accuracy on the local test set
