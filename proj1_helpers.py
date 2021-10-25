@@ -3,7 +3,6 @@
 import csv
 import numpy as np
 from cleaning import *
-import itertools
 
 
 def load_csv_data(data_path, sub_sample=False):
@@ -26,17 +25,21 @@ def load_csv_data(data_path, sub_sample=False):
     return yb, input_data, ids
 
 
-def build_expansion(data):
-    combinations = np.array(list(itertools.combinations_with_replacement(range(data.shape[1]),2)))
-    return data[:,combinations[:,0]] *data[:,combinations[:,1]]
-
-def add_bias_term(data):
-    return np.hstack((np.ones((data.shape[0],1)),data))
-    
-
-
 def predict_labels(weights, data):
-    """Generates class predictions given weights, and a test data matrix"""
+    """
+    Generates class predictions given weights, and a test data matrix        
+    Parameters
+    ----------
+        weights :
+            The weights computed in the train set
+        data:
+            the data to which we want to give predictions
+    Returns
+    -------
+        y_pred : 
+            The predictions
+    
+    """
     y_pred = np.dot(data, weights)
     y_pred[np.where(y_pred <= 0)] = -1
     y_pred[np.where(y_pred > 0)] = 1
@@ -56,22 +59,28 @@ def create_csv_submission(ids, y_pred, name):
         writer.writeheader()
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
-
             
-def compute_rmse(mse):
+def predict_labels_logistic_regression(weights, x):
     """
-        Compute the Root Mean Square Error (RMSE) given the Mean Square Error (MSE).
+        Function that computes the predictions for the given data of the logistic regression model with given the weights
         
-    Parameters
-    ----------
-        mse :
-            Mean Square Error
-    Returns
-    -------
-        rmse : 
-            Root Mean Square Error
+        Parameters 
+        ----------
+            weights :
+                Trained weights of the model
+            y :
+                Data points
+        Returns 
+        -------
+            Predicted labels of the model for the given data
+            
     """
-    return np.sqrt(2 * mse)
+    y = 1 / (1 + np.exp(- x @ weights))
+
+    y[y >= 0.5] = 1
+    y[y < 0.5] = -1
+
+    return y
 
 
 def split_data(x, y, ratio, seed=1):
@@ -103,43 +112,3 @@ def split_data(x, y, ratio, seed=1):
     
     return x[idx], y[idx], np.delete(x, idx, axis=0), np.delete(y, idx, axis=0)
 
-
-def compute_accuracy(y, y_hat):
-    """
-        Compute the accuracy given the ground truth and the predicted data
-
-        Parameters
-        ----------
-            y :
-                Ground labels
-            y_hat :
-                Predicted labels
-        Returns
-        -------
-            Accuracy in the range [0;1]
-    """
-    return np.mean(np.equal(y, y_hat))
-
-def compute_f1_score(y, y_hat):
-    """
-        Compute the accuracy given the ground truth and the predicted data according to the definition on Wikipedia.w
-
-        Parameters
-        ----------
-            y :
-                Ground labels
-            y_hat :
-                Predicted labels
-        Returns
-        -------
-            F1-score in the range [0;1]
-    """
-    not_classified_correctly = np.sum(~np.equal(y, y_hat))
-    mask_classified_positive = y>0
-    
-    subs_y = y[mask_classified_positive]
-    subs_y_hat = y_hat[mask_classified_positive]
-    
-    tp = np.equal(subs_y,subs_y_hat).sum()
-    
-    return tp/(tp+1/2*not_classified_correctly)

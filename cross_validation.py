@@ -4,6 +4,7 @@ import numpy as np
 from implementations import *
 from proj1_helpers import *
 import matplotlib.pyplot as plt
+from expansion import *
 
 """
 Functions for the cross validation
@@ -37,10 +38,7 @@ def build_k_indices(y, k_fold, seed):
 
     return np.array(k_indices)
 
-
-
-
-def cross_validation_visualization(lambdas, rmse_tr, rmse_te, logy=False):
+def cross_validation_visualization(lambdas, max_degree, acc_te):
     """visualization the curves of mse_tr and mse_te.
         Parameters
             ----------
@@ -54,22 +52,27 @@ def cross_validation_visualization(lambdas, rmse_tr, rmse_te, logy=False):
                 logy:
                     True if the plot should be a log-log plot, log-lin plot otherwise
     """
-    # This method comes from the helper "plots.py" and was given in lab 4
     
-    if logy:
-        plt.loglog(lambdas, rmse_tr, marker=".", color='b', label='train error')
-        plt.loglog(lambdas, rmse_te, marker=".", color='r', label='test error')
-    else:
-        plt.semilogx(lambdas, rmse_tr, marker=".", color='b', label='train error')
-        plt.semilogx(lambdas, rmse_te, marker=".", color='r', label='test error')
+    degrees = list(range(1,max_degree+1))
+    
+    fig, ax = plt.subplots()
+    im = ax.imshow(acc_te, cmap='viridis')
+
+    ax.set_xticks(np.arange(len(degrees)))
+    ax.set_yticks(np.arange(len(lambdas)))
+
+    ax.set_xticklabels(degrees)
+    ax.set_yticklabels(lambdas)
+    plt.colorbar(im,ax=ax)
+
         
-    plt.xlabel("Lambda")
-    plt.ylabel("RMSE")
+    plt.xlabel("Degree")
+    plt.ylabel("Lambda")
     plt.title("Cross validation")
     plt.legend(loc=2)
-    plt.grid(True)
+    plt.show()
     
-def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, lambda_, compute_loss, compute_gradient,
+def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree,  compute_loss, compute_gradient,
                               optimization='sgd', batch_size=1):
     """
         Perform one step of the cross validation :
@@ -113,7 +116,12 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
     x_train_cv = np.delete(x, k_indices[k], axis=0)
     y_train_cv = np.delete(y, k_indices[k], axis=0)
     
+    x_test_cv = power_exp(x_test_cv, degree)
+    x_train_cv = power_exp(x_train_cv, degree)
+    
+    initial_w = np.zeros(x_train_cv.shape[1])
 
+    # Compute the optimal weights and the loss according to the chosen method
     if optimization == 'sgd':
         w, loss_tr = stochastic_gradient_descent(y_train_cv, x_train_cv, initial_w, max_iters, gamma, compute_loss,
                                                  compute_gradient, lambda_=lambda_, batch_size=batch_size)
@@ -124,12 +132,17 @@ def cross_validation_one_step(y, x, initial_w, k_indices, k, max_iters, gamma, l
         print(f'Optimization method not supported {optimization}')
         return
     
-    loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
-    return compute_rmse(loss_tr), compute_rmse(loss_te)
-
     
-def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, initial_w , k_fold=10, seed=1,
-                             lambdas=np.logspace(-4, 0, 30), gammas=[0.05], batch_size=1, optimization='sgd'):
+    acc_test = compute_accuracy(y_test_cv, predict_labels(w, x_test_cv))
+    acc_train = compute_accuracy(y_train_cv, predict_labels(w, x_train_cv))
+    
+    #loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
+    #return compute_rmse(loss_tr), compute_rmse(loss_te)
+    
+    return acc_train, acc_test
+    
+def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, lambdas, max_degree, gamma=0.0,
+                             k_fold=8, seed=1, batch_size=1, optimization='sgd'):
     """
         Perform cross validation to find the best lambda (regulariser) and gamma (learning rate).
         
@@ -166,45 +179,45 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, i
                 - RMSE according for the different values of the hyperparameters
     """
 
+    print("Beginning cross-validation")
+    
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
 
     nb_lambdas = len(lambdas)
-    nb_gammas = len(gammas)
 
     # Tables which will store all the loss value for all lambda-gamma combination
-    rmse_te = np.zeros((nb_lambdas, nb_gammas))
-    rmse_tr = np.zeros((nb_lambdas, nb_gammas))
+    acc_te = np.zeros((nb_lambdas, max_degree))
+    acc_tr = np.zeros((nb_lambdas, max_degree))
 
     # iterate over all (gamma, lambda) pairs
-    for ind_gamma, gamma in enumerate(gammas):
+    for ind_deg, deg in enumerate(range(4,max_degree+1)):
         for ind_lambda, lambda_ in enumerate(lambdas):
             # List to store the loss for the current lambda and gamma pairs
-            rmse_te_tmp = []
-            rmse_tr_tmp = []
+            acc_tr_tmp = []
+            acc_te_tmp = []
             
+            print(f"Perform cross-validation for lambda={lambda_:.4f} and degree={deg}")
             # Perform the cross validation
             for k in range(k_fold):
-                rmse_training, rmse_test  = cross_validation_one_step(y, tx, initial_w, k_indices,
-                                                                      k, max_iters, gamma, lambda_,
+                acc_training, acc_test  = cross_validation_one_step(y, tx, k_indices,
+                                                                      k, max_iters, lambda_, deg,
                                                  compute_loss, compute_gradient, optimization, batch_size)
-                rmse_te_tmp.append(rmse_test)
-                rmse_tr_tmp.append(rmse_training)
+                
+                acc_te_tmp.append(acc_test)
+                acc_tr_tmp.append(acc_training)
 
             # Report the mean squared loss for the training and test sets for the current (gamma, lambda) pair 
-            rmse_te[ind_lambda, ind_gamma] = np.mean(rmse_te_tmp)
-            rmse_tr[ind_lambda, ind_gamma] = np.mean(rmse_tr_tmp)
+            acc_te[ind_lambda, ind_deg] = np.mean(acc_te_tmp)
+            acc_tr[ind_lambda, ind_deg] = np.mean(acc_tr_tmp)
     
-    # Plot the loss of the test and the train set
-    if(nb_gammas==1):
-        cross_validation_visualization(lambdas, rmse_tr, rmse_te)
+    cross_validation_visualization(lambdas, max_degree, acc_te)
     
     # Find the best arugments 
-    argmin = rmse_te.argmin()
-    best_lam_ind = argmin // nb_gammas
-    best_gam_ind = argmin % nb_gammas
+    argmin = acc_te.argmax()
+    best_lam_ind = argmin // max_degree
+    best_degree = argmin % max_degree +1
 
     best_lambda = lambdas[best_lam_ind]
-    best_gamma = gammas[best_gam_ind]
     
-    return best_lambda, best_gamma
+    return best_lambda, best_degree
