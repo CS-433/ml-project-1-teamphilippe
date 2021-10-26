@@ -16,6 +16,7 @@ def build_expansion(data):
     """
     # Build all possible pairs of number up to n=data.shape[1]
     combinations = np.array(list(itertools.combinations(range(data.shape[1]),2)))
+    
     # Construct the product of every pair of columns in the dataset
     all_columns_com = data[:, combinations[:, 0]] * data[:, combinations[:, 1]]
     return all_columns_com
@@ -56,7 +57,7 @@ def power_exp(data, max_degree, base_cols=list(range(1, 24))):
         ------
             New augmented data matrix
     """
-    for i in range(1, max_degree + 1):
+    for i in range(2, max_degree + 1):
         base_cols_powered = data[:, base_cols] ** i
         data = np.concatenate((data, base_cols_powered), axis=1)
 

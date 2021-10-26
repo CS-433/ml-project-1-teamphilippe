@@ -52,7 +52,7 @@ def load_and_preprocess_training_data(best_degree, cols_angle):
     x_cleaned, above_lim_training, below_lim_training = clip_IQR(x_cleaned)
     
     # Standardize the data
-    x_cleaned, means, stds = standardize(x_cleaned)
+    x_cleaned, means, stds = standardise(x_cleaned)
     
     # Expand the features
     x_cleaned = add_bias_term(x_cleaned)

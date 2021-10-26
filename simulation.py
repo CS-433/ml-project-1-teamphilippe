@@ -274,7 +274,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
 
 
 def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100, lambdas=np.logspace(-15, 0, 20),
-                   gammas=0.0001, max_degree=7):
+                   gammas=0.0001, max_degree=9):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
