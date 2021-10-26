@@ -209,8 +209,8 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
             rmse_tr[ind_lambda, ind_deg] = np.mean(rmse_tr_tmp)
             rmse_te[ind_lambda, ind_deg] = np.mean(rmse_te_tmp)
 
-            print(f"Actual loss for lambda={lambda_:.4f} and degree={deg}."
-                  f"tr={np.mean(rmse_tr_tmp)}, te={np.mean(rmse_te_tmp)}")
+            print(f"Loss for lambda={lambda_:.4f} and degree={deg} : "
+                  f"tr={np.mean(rmse_tr_tmp):.6f}, te={np.mean(rmse_te_tmp):.6f}\n")
 
     cross_validation_visualization(lambdas, min_degree, max_degree, rmse_te)
 

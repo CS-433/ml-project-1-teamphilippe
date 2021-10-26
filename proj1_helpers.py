@@ -3,10 +3,22 @@
 import csv
 import numpy as np
 from cleaning import *
+from pathlib import Path
+from zipfile import ZipFile
 
 
 def load_csv_data(data_path, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
+    
+    # First check if the zip file was already unzipped
+    if not Path(data_path).exists():
+        print('==> Unzipping the data...')
+        # If the data folder does not exist, then unzip it
+        with ZipFile('data/data.zip', 'r') as zipped_file:
+            # Extract the data files
+            zipped_file.extractall(path='data')
+            print('Data unzipped in the directory "data"')
+    
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
     x = np.genfromtxt(data_path, delimiter=",", skip_header=1)
     ids = x[:, 0].astype(np.int)

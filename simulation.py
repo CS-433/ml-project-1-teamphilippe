@@ -1,6 +1,7 @@
 from cross_validation import *
 from metrics import *
 from expansion import *
+from proj1_helpers import *
 
 """
 Customise version of the stochastic gradient descent to show plot of the loss function 
