@@ -126,12 +126,6 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, ga
         print(f'Optimization method not supported {optimization}')
         return
     
-    
-    #acc_test = compute_accuracy(y_test_cv, predict_labels(w, x_test_cv))
-    #acc_train = compute_accuracy(y_train_cv, predict_labels(w, x_train_cv))
-    
-    #return acc_train, acc_test
-    
     loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
     return compute_rmse(loss_tr), compute_rmse(loss_te)
     

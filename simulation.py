@@ -157,6 +157,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma , seed=seed)
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
             
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma, 
@@ -170,6 +171,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=lambdas, max_degree=max_degree, gamma=gamma, seed=seed)
             
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
             
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te,  max_iters, gamma, 
@@ -189,6 +191,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed, batch_size=y_tr.shape[0])
             
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves. We train with all the samples 
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,  
@@ -196,12 +199,13 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
 
         elif model == 'least_squares_SGD':
             # Cross validation only to find a good learning rate gamma (lambda is not used in least_squares SGD)
-            best_lambda, best_degree = perform_cross_validation(
+            _, best_degree = perform_cross_validation(
                 y_tr, x_tr,
                 compute_loss_least_squares, compute_gradient_least_squares, 
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed)
             
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
             
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma, 
@@ -228,6 +232,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 seed=seed, optimization='ridge_normal_eq')
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
             
             # Return the solution to the normal equation
             w, loss_mse = ridge_regression(y_tr, x_tr, best_lambda)
@@ -235,16 +240,15 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
         else:
             print(f'Model ({model}) not supported')
             return
-
-        x_te = power_exp(x_te, best_degree)
         
-        # Predict the labels on the local test set
+        
         y_hat_te = predict_labels(w, x_te)
+
 
     return y_hat_te, w, loss_mse, best_degree, best_lambda
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100, lambdas=np.logspace(-14, 0, 20), gammas=0.0001, max_degree=8):
+def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100, lambdas=np.logspace(-14, 0, 20), gammas=0.00001, max_degree=7):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
 
@@ -292,6 +296,11 @@ def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100,
         # As explained on the forum, the input for the logistic regression should have label in {0,1}
         y_tr[y_tr == -1.0] = 0.0
         y_te[y_te == -1.0] = 0.0
+        x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
+        x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
+        
+        x_tr = build_expansion(x_tr)
+        x_te = build_expansion(x_te)
     else:
         # If we do not a logistic regression model, we can do polynomial expansion in the input features
         # Running time is too slow to do this with logistic regression
