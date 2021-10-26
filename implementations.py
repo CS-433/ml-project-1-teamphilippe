@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from matplotlib import pyplot as plt
 
 from loss import *
 from metrics import *
@@ -232,12 +233,14 @@ def stochastic_gradient_descent(y, tx, initial_w, max_iters, gamma, compute_loss
 
     # start of the stochastic gradient descent
     for n_iter in range(max_iters):
-        # start of the compute of the stochastic gradient for the weight vector candidate
+
         for y_, tx_ in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
             # stochastic gradient with particular batch of data points and its corresponding outputs
             sgrad = compute_gradient(y_, tx_, w, lambda_)
+
             # Gradient Descent
             w = w - gamma * sgrad
+
             # compute the loss of the corresponding optimal weight vector
             loss = compute_loss(y, tx, w, lambda_)
 

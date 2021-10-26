@@ -321,19 +321,12 @@ def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100,
         # As explained on the forum, the input for the logistic regression should have label in {0,1}
         y_tr[y_tr == -1.0] = 0.0
         y_te[y_te == -1.0] = 0.0
-        x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
-        x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
 
-        x_tr = build_expansion(x_tr)
-        x_te = build_expansion(x_te)
-    else:
-        # If we do not a logistic regression model, we can do polynomial expansion in the input features
-        # Running time is too slow to do this with logistic regression
-        x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
-        x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
-        
-        x_tr = build_expansion(x_tr)
-        x_te = build_expansion(x_te)
+    x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
+    x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
+
+    x_tr = build_expansion(x_tr)
+    x_te = build_expansion(x_te)
 
     print("End of processing + expansion")
     print("Beginning training")

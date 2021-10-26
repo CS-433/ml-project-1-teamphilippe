@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from implementations import *
-from proj1_helpers import *
 import matplotlib.pyplot as plt
 from expansion import *
 
@@ -54,9 +53,9 @@ def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
                 acc_te:
                     The losses on the test set
     """
-    
-    degrees = list(range(min_degree,max_degree+1))
-    
+
+    degrees = list(range(min_degree, max_degree + 1))
+
     fig, ax = plt.subplots()
     im = ax.imshow(acc_te, cmap='viridis')
 
@@ -116,7 +115,7 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, ga
 
     x_train_cv = np.delete(x, k_indices[k], axis=0)
     y_train_cv = np.delete(y, k_indices[k], axis=0)
-    
+
     initial_w = np.zeros(x_train_cv.shape[1])
 
     # Compute the optimal weights and the loss according to the chosen method
@@ -178,7 +177,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
 
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
-    range_degree = range(min_degree, max_degree+1)
+    range_degree = range(min_degree, max_degree + 1)
 
     nb_lambdas = len(lambdas)
     nb_degree = len(range_degree)
@@ -195,24 +194,27 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
             # List to store the loss for the current lambda and gamma pairs
             rmse_tr_tmp = []
             rmse_te_tmp = []
-            
+
             print(f"Perform cross-validation for lambda={lambda_:.4f} and degree={deg}")
             # Perform the cross validation
             for k in range(k_fold):
                 rmse_train, rmse_test = cross_validation_one_step(y, x_exp, k_indices,
-                                                                      k, max_iters, lambda_, deg, gamma,
-                                                 compute_loss, compute_gradient, optimization, batch_size)
+                                                                  k, max_iters, lambda_, deg, gamma,
+                                                                  compute_loss, compute_gradient, optimization,
+                                                                  batch_size)
                 rmse_tr_tmp.append(rmse_train)
                 rmse_te_tmp.append(rmse_test)
 
             # Report the mean squared loss for the training and test sets for the current (gamma, lambda) pair 
             rmse_tr[ind_lambda, ind_deg] = np.mean(rmse_tr_tmp)
             rmse_te[ind_lambda, ind_deg] = np.mean(rmse_te_tmp)
-            print(f"Actual loss for lambda={lambda_:.4f} and degree={deg}. tr={np.mean(rmse_tr_tmp)}, te={np.mean(rmse_te_tmp)}")
+
+            print(f"Actual loss for lambda={lambda_:.4f} and degree={deg}."
+                  f"tr={np.mean(rmse_tr_tmp)}, te={np.mean(rmse_te_tmp)}")
 
     cross_validation_visualization(lambdas, min_degree, max_degree, rmse_te)
 
-    # Find the best arugments
+    # Find the best arguments
     argmin = rmse_te.argmin()
     best_lam_ind = argmin // max_degree
     best_degree = argmin % max_degree + min_degree
