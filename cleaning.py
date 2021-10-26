@@ -49,7 +49,7 @@ def replace_by_default_value(x, default_values=None):
             median = np.median(x[~mask, i])
             x[mask, i] = median
 
-            # Store the value so that it can be used to replace -999 in the test set 
+            # Store the value so that it can be used to replace -999 in the test set
             default_values.append(median)
     else:
         # We clean the test set
@@ -132,14 +132,14 @@ def check_azimuth_and_rerange(x, col_idx):
     Check and clip if the values of azimuthal columns are in the range [-pi, pi[
     Parameters
     ----------
-        x : 
+        x :
             The dataset from which we want to check the angle vlaues
         col_idx:
             The column that needs to be check
     Returns
     -------
-        x : 
-            The checked dataset 
+        x :
+            The checked dataset
     """
     # Check if the value is in the range
     mask = (x[:, col_idx] >= np.pi) | (x[:, col_idx] < -np.pi)
@@ -210,8 +210,8 @@ def standardise(x):
         std_x :
             Standard deviation of x before standardisation
     """
-    mean_x = np.mean(x)
-    x = x - mean_x
-    std_x = np.std(x)
-    x = x / std_x
+    mean_x = np.mean(x, axis=0)
+    std_x = np.std(x, axis=0)
+    x = (x - mean_x)/std_x
+
     return x, mean_x, std_x

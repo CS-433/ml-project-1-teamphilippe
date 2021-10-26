@@ -40,21 +40,23 @@ def build_k_indices(y, k_fold, seed):
     return np.array(k_indices)
 
 
-def cross_validation_visualization(lambdas, max_degree, acc_te):
+def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
     """
-        Visualization the curves of mse_tr and mse_te.
+        visualization the curves of mse_tr and mse_te.
         Parameters
             ----------
                 lambdas:
                     lambda that were used to compute the loss on the train and test set
+                min_degree:
+                    Min degree in the polynomial expansion
                 max_degree:
-                    The max degree used in polynomial expansion
+                    Max degree in the polynomial expansion
                 acc_te:
-                    The accuracy on the test set
+                    The losses on the test set
     """
-
-    degrees = list(range(1, max_degree + 1))
-
+    
+    degrees = list(range(min_degree,max_degree+1))
+    
     fig, ax = plt.subplots()
     im = ax.imshow(acc_te, cmap='viridis')
 
@@ -114,10 +116,7 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, ga
 
     x_train_cv = np.delete(x, k_indices[k], axis=0)
     y_train_cv = np.delete(y, k_indices[k], axis=0)
-
-    x_test_cv = power_exp(x_test_cv, degree)
-    x_train_cv = power_exp(x_train_cv, degree)
-
+    
     initial_w = np.zeros(x_train_cv.shape[1])
 
     # Compute the optimal weights and the loss according to the chosen method
@@ -126,13 +125,11 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, ga
                                                  compute_gradient, lambda_=lambda_, batch_size=batch_size)
     elif optimization == 'ridge_normal_eq':
         w, loss_tr = ridge_regression(y_train_cv, x_train_cv, lambda_)
-
+    elif optimization == 'least_squares':
+        w, loss_tr = least_squares(y_train_cv, x_train_cv)
     else:
         print(f'Optimization method not supported {optimization}')
         return
-
-    acc_test = compute_accuracy(y_test_cv, predict_labels(w, x_test_cv))
-    acc_train = compute_accuracy(y_train_cv, predict_labels(w, x_train_cv))
 
     loss_te = compute_loss(y_test_cv, x_test_cv, w, lambda_)
     return compute_rmse(loss_tr), compute_rmse(loss_te)
@@ -161,7 +158,7 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
                 Max degree used in the polynomial expansion
             gamma :
                 Step size of the stochastic gradient descent
-            k_fold: 
+            k_fold:
                 Number of passes for the cross-validation
             seed:
                 Seed for random splitting
@@ -177,43 +174,48 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
     """
     print("Beginning cross-validation")
 
+    min_degree = 2
+
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
+    range_degree = range(min_degree, max_degree+1)
 
     nb_lambdas = len(lambdas)
+    nb_degree = len(range_degree)
 
     # Tables which will store all the loss value for all lambda-gamma combination
-    acc_te = np.zeros((nb_lambdas, max_degree))
-    acc_tr = np.zeros((nb_lambdas, max_degree))
+    rmse_tr = np.zeros((nb_lambdas, nb_degree))
+    rmse_te = np.zeros((nb_lambdas, nb_degree))
 
     # iterate over all (gamma, lambda) pairs
-    for ind_deg, deg in enumerate(range(2, max_degree + 1)):
+    for ind_deg, deg in enumerate(range_degree):
+        x_exp = power_exp(tx, deg)
+
         for ind_lambda, lambda_ in enumerate(lambdas):
             # List to store the loss for the current lambda and gamma pairs
-            acc_tr_tmp = []
-            acc_te_tmp = []
-
+            rmse_tr_tmp = []
+            rmse_te_tmp = []
+            
             print(f"Perform cross-validation for lambda={lambda_:.4f} and degree={deg}")
             # Perform the cross validation
             for k in range(k_fold):
-                acc_training, acc_test = cross_validation_one_step(y, tx, k_indices,
-                                                                   k, max_iters, lambda_, deg, gamma,
-                                                                   compute_loss, compute_gradient, optimization,
-                                                                   batch_size)
-
-                acc_te_tmp.append(acc_test)
-                acc_tr_tmp.append(acc_training)
+                rmse_train, rmse_test = cross_validation_one_step(y, x_exp, k_indices,
+                                                                      k, max_iters, lambda_, deg, gamma,
+                                                 compute_loss, compute_gradient, optimization, batch_size)
+                rmse_tr_tmp.append(rmse_train)
+                rmse_te_tmp.append(rmse_test)
 
             # Report the mean squared loss for the training and test sets for the current (gamma, lambda) pair 
-            acc_te[ind_lambda, ind_deg] = np.mean(acc_te_tmp)
-            acc_tr[ind_lambda, ind_deg] = np.mean(acc_tr_tmp)
+            rmse_tr[ind_lambda, ind_deg] = np.mean(rmse_tr_tmp)
+            rmse_te[ind_lambda, ind_deg] = np.mean(rmse_te_tmp)
+            print(f"Actual loss for lambda={lambda_:.4f} and degree={deg}. tr={np.mean(rmse_tr_tmp)}, te={np.mean(rmse_te_tmp)}")
 
-    cross_validation_visualization(lambdas, max_degree, acc_te)
+    cross_validation_visualization(lambdas, min_degree, max_degree, rmse_te)
 
-    # Find the best arguments
-    argmax = acc_te.argmin()
-    best_lam_ind = argmax // max_degree
-    best_degree = argmax % max_degree + 1
+    # Find the best arugments
+    argmin = rmse_te.argmin()
+    best_lam_ind = argmin // max_degree
+    best_degree = argmin % max_degree + min_degree
 
     best_lambda = lambdas[best_lam_ind]
 

@@ -15,8 +15,7 @@ def build_expansion(data):
             A new dataset composed of product of every pair of columns
     """
     # Build all possible pairs of number up to n=data.shape[1]
-    combinations = np.array(list(itertools.combinations_with_replacement(range(data.shape[1]), 2)))
-
+    combinations = np.array(list(itertools.combinations(range(data.shape[1]),2)))
     # Construct the product of every pair of columns in the dataset
     all_columns_com = data[:, combinations[:, 0]] * data[:, combinations[:, 1]]
     return all_columns_com
