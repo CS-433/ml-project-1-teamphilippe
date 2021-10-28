@@ -120,14 +120,14 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
 
     # Standardise the matrix and expand it
     x_te_cleaned = (x_te_cleaned - means) / stds
+    
+    x_te_cleaned = add_bias_term(x_te_cleaned)
+    
     if expansion:
-        x_te_cleaned = add_bias_term(x_te_cleaned)
-
         # Need to increment the indexes of angle features since we added
         # the bias term
         x_te_cleaned = build_expansion(x_te_cleaned)
         x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(cols_angle) + 1)
-        
         x_te_cleaned = power_exp(x_te_cleaned, best_degree)
     
     return x_te_cleaned, ids_test, y_test
@@ -324,11 +324,12 @@ def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100,
         y_tr[y_tr == -1.0] = 0.0
         y_te[y_te == -1.0] = 0.0
 
-    x_tr = build_expansion(x_tr)
-    x_te = build_expansion(x_te)
+   
         
     x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
     x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
+    x_tr = build_expansion(x_tr)
+    x_te = build_expansion(x_te)
 
 
     print("End of processing + expansion")

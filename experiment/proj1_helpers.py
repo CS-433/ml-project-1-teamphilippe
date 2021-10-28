@@ -124,3 +124,9 @@ def split_data(x, y, ratio, seed=1):
     idx = np.random.choice(y.shape[0], int(ratio * y.shape[0]), replace=False)
 
     return x[idx], y[idx], np.delete(x, idx, axis=0), np.delete(y, idx, axis=0)
+
+def expected_number_of_parameters(nb_features, max_degree, nb_angles_col):
+    # If we do feature expansion before adding cosine
+    return 1+nb_features+(nb_features choose 2)+nb_angles_col+nb_features*(max_degree-1)
+    # If we do feature expansion after adding cosine
+    # return 1 + nb_features + (nb_features+nb_angles_col choose 2) + nb_features(

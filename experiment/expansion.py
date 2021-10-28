@@ -15,7 +15,11 @@ def build_expansion(data):
             A new dataset composed of product of every pair of columns
     """
     # Build all possible pairs of number up to n=data.shape[1]
-    combinations = np.array(list(itertools.combinations(range(data.shape[1]),2)))
+    all_combinations = list(itertools.combinations(range(data.shape[1]),2))
+    # Explicitly add the (0,0) terms as we always want a bias term.
+    all_combinations.append((0,0))
+    # Sort the combinations in terms of the first and then second element of the tuple
+    combinations = np.array(sorted(all_combinations))
     
     # Construct the product of every pair of columns in the dataset
     all_columns_com = data[:, combinations[:, 0]] * data[:, combinations[:, 1]]
