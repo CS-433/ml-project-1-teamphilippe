@@ -109,8 +109,8 @@ def main():
     # Best hyperparameters found (lambda and degree
     # of the polynomials expansion) during the cross validation done
     # in the notebook "project1".
-    best_lambda = 5.179474679231202e-05
-    best_degree = 12
+    best_lambda = 4.393970560760786e-06
+    best_degree = 10
     
     print('==> Loading and preprocessing training data...\n')
     # Load and preprocess training data

@@ -3,6 +3,9 @@
 from implementations import *
 import matplotlib.pyplot as plt
 from experiment.expansion import *
+from experiment.visualisation import *
+
+
 
 """
 Functions for the cross validation
@@ -37,40 +40,6 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
 
     return np.array(k_indices)
-
-
-def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
-    """
-        visualization the curves of mse_tr and mse_te.
-        Parameters
-            ----------
-                lambdas:
-                    lambda that were used to compute the loss on the train and test set
-                min_degree:
-                    Min degree in the polynomial expansion
-                max_degree:
-                    Max degree in the polynomial expansion
-                acc_te:
-                    The losses on the test set
-    """
-
-    degrees = list(range(min_degree, max_degree + 1))
-
-    fig, ax = plt.subplots()
-    im = ax.imshow(acc_te, cmap='viridis')
-
-    ax.set_xticks(np.arange(len(degrees)))
-    ax.set_yticks(np.arange(len(lambdas)))
-
-    ax.set_xticklabels(degrees)
-    ax.set_yticklabels(lambdas)
-    plt.colorbar(im, ax=ax)
-
-    plt.xlabel("Degree")
-    plt.ylabel("Lambda")
-    plt.title("Cross validation")
-    plt.show()
-
 
 def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, gamma, compute_loss, compute_gradient,
                               optimization='sgd', batch_size=1):

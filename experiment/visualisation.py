@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_histogram(x, col_idx):
     """
@@ -94,3 +95,42 @@ def quad_histograms(x, idx_1, idx_2, idx_3, idx_4):
 
     plt.subplots_adjust(wspace=0.2, hspace=0.2)
     plt.show()
+    
+    
+def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
+    """
+        Visualization the curves of mse_tr and mse_te.
+        Parameters
+            ----------
+                lambdas:
+                    lambda that were used to compute the loss on the train and test set
+                min_degree:
+                    Min degree in the polynomial expansion
+                max_degree:
+                    Max degree in the polynomial expansion
+                acc_te:
+                    The losses on the test set
+    """
+
+    degrees = list(range(min_degree, max_degree + 1))
+    val_lambdas = list(map(lambda x: f'{x:.4e}', lambdas))
+
+    # Create the heatmap
+    fig, ax = plt.subplots()
+    im = ax.imshow(acc_te, cmap='viridis')
+
+    
+    # Set the axis labels and value
+    ax.set_xticks(np.arange(len(degrees)))
+    ax.set_yticks(np.arange(len(val_lambdas)))
+
+    ax.set_xticklabels(degrees)
+    ax.set_yticklabels(val_lambdas)
+    plt.colorbar(im, ax=ax)
+
+    # Set titles
+    plt.xlabel("Degree")
+    plt.ylabel("Lambda")
+    plt.title("Cross validation")
+    plt.show()
+

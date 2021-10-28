@@ -5,6 +5,7 @@ import numpy as np
 from experiment.cleaning import *
 from pathlib import Path
 from zipfile import ZipFile
+from math import comb
 
 
 def load_csv_data(data_path, sub_sample=False):
@@ -88,7 +89,7 @@ def predict_labels_logistic_regression(weights, x):
         -------
             Predicted labels of the model for the given data
     """
-    y = 1 / (1 + np.exp(- x @ weights))
+    y = sigmoid(x @ weights)
 
     y[y >= 0.5] = 1
     y[y < 0.5] = -1
@@ -126,7 +127,8 @@ def split_data(x, y, ratio, seed=1):
     return x[idx], y[idx], np.delete(x, idx, axis=0), np.delete(y, idx, axis=0)
 
 def expected_number_of_parameters(nb_features, max_degree, nb_angles_col):
+    print()
     # If we do feature expansion before adding cosine
-    return 1+nb_features+(nb_features choose 2)+nb_angles_col+nb_features*(max_degree-1)
+    return 1 + comb(nb_features+1,2)+nb_angles_col+nb_features*(max_degree-1)
     # If we do feature expansion after adding cosine
-    # return 1 + nb_features + (nb_features+nb_angles_col choose 2) + nb_features(
+    return 1 + comb(nb_features+nb_angles_col+1,2) + nb_features*(max_degree-1)

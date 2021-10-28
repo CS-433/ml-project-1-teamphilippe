@@ -47,7 +47,7 @@ def compute_loss_logistic_regression(y, tx, w, *args):
             Loss of the weight vector, using the logistic regression method, computed with the parameters
     """
     xtw = tx @ w
-    return np.sum(np.log(1 + np.exp(xtw)) - y * xtw) / tx.shape[0]
+    return  np.sum(np.log(1 + np.exp(xtw)) - y * xtw) / tx.shape[0]
 
 
 # Regularized logistic regression
