@@ -58,8 +58,9 @@ def load_and_preprocess_training_data(best_degree, cols_angle):
     x_cleaned = add_bias_term(x_cleaned)
     
     # Increment indexes of angles features since we added a bias term
-    x_cleaned = add_sin_cos(x_cleaned, np.array(cols_angle) + 1)
+    
     x_cleaned = build_expansion(x_cleaned)
+    x_cleaned = add_sin_cos(x_cleaned, np.array(cols_angle) + 1)
     
     # Polynomial expansion with the best degree found
     x_cleaned = power_exp(x_cleaned, best_degree)
@@ -109,8 +110,8 @@ def main():
     # Best hyperparameters found (lambda and degree
     # of the polynomials expansion) during the cross validation done
     # in the notebook "project1".
-    best_lambda = 1e-15
-    best_degree = 4
+    best_lambda = 5.179474679231202e-05
+    best_degree = 9
     
     print('==> Loading and preprocessing training data...\n')
     # Load and preprocess training data
@@ -127,6 +128,7 @@ def main():
                                                                    above_lim_training, below_lim_training,
                                                                    means, stds, cols_angle, best_degree)
     
+    print(w.shape)
     print('\n==> Predicting labels for the test set...\n')
     # Make predictions for the test set
     y_test_pred = predict_labels(w, x_te_cleaned)

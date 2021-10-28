@@ -125,8 +125,9 @@ def process_test_set(test_data_path, col_removed_training, default_values_traini
 
         # Need to increment the indexes of angle features since we added
         # the bias term
-        x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(cols_angle) + 1)
         x_te_cleaned = build_expansion(x_te_cleaned)
+        x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(cols_angle) + 1)
+        
         x_te_cleaned = power_exp(x_te_cleaned, best_degree)
     
     return x_te_cleaned, ids_test, y_test
@@ -193,7 +194,6 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=lambdas, max_degree=max_degree, gamma=gamma, seed=seed)
 
             x_tr = power_exp(x_tr, best_degree)
-            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
@@ -201,6 +201,8 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                                                                  compute_gradient_reg_logistic_regression,
                                                                  lambda_=best_lambda)
 
+        x_te = power_exp(x_te, best_degree)
+        
         # Predict the labels on the local test set
         y_hat_te = predict_labels_logistic_regression(w, x_te)
     else:
@@ -215,7 +217,6 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed, batch_size=y_tr.shape[0])
 
             x_tr = power_exp(x_tr, best_degree)
-            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves.
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
@@ -230,7 +231,6 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed)
 
             x_tr = power_exp(x_tr, best_degree)
-            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
@@ -258,14 +258,15 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 seed=seed, optimization='ridge_normal_eq')
 
             x_tr = power_exp(x_tr, best_degree)
-            x_te = power_exp(x_te, best_degree)
 
-            # Return the solution to the normal equation
+            # Return the solution to the (regularised) normal equation
             w, loss_mse = ridge_regression(y_tr, x_tr, best_lambda)
 
         else:
             print(f'Model ({model}) not supported')
             return
+        
+        x_te = power_exp(x_te, best_degree)
         
         # Predict the labels on the local test set
         y_hat_te = predict_labels(w, x_te)
@@ -273,7 +274,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
     return y_hat_te, w, loss_mse, best_degree, best_lambda
 
 
-def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100, lambdas=np.logspace(-15, 0, 20),
+def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100, lambdas=np.logspace(-15, 0, 15),
                    gammas=0.0001, max_degree=9):
     """
         Perform a complete pre-processing, cross-validation, training, testing experiment.
@@ -311,7 +312,7 @@ def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100,
     # Split the training set into a local training set and a local test set
     x_tr, y_tr, x_te, y_te = split_data(x, y, ratio=ratio_split_tr, seed=seed)
 
-    # Standardize all the features
+    # Standardise all the features
     x_tr, means, stds = standardise(x_tr)
     x_te = (x_te - means) / stds
 
@@ -323,11 +324,12 @@ def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100,
         y_tr[y_tr == -1.0] = 0.0
         y_te[y_te == -1.0] = 0.0
 
+    x_tr = build_expansion(x_tr)
+    x_te = build_expansion(x_te)
+        
     x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
     x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)
 
-    x_tr = build_expansion(x_tr)
-    x_te = build_expansion(x_te)
 
     print("End of processing + expansion")
     print("Beginning training")

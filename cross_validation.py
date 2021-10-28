@@ -216,8 +216,10 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
 
     # Find the best arguments
     argmin = rmse_te.argmin()
-    best_lam_ind = argmin // max_degree
-    best_degree = argmin % max_degree + min_degree
+    #best_lam_ind = argmin // max_degree
+    #best_degree = argmin % max_degree + min_degree
+    best_lam_ind = argmin // nb_degree
+    best_degree = argmin % nb_degree + min_degree
 
     best_lambda = lambdas[best_lam_ind]
 

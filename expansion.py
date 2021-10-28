@@ -37,11 +37,11 @@ def add_sin_cos(data, columns):
         ------
             New data matrix augmented with new combinations of features
     """
-    data = np.concatenate((data, np.cos(data[:, columns]), np.sin(data[:, columns])), axis=1)
+    data = np.concatenate((data, np.cos(data[:, columns])), axis=1)#, np.sin(data[:, columns])), axis=1)
     return data
 
 
-def power_exp(data, max_degree, base_cols=list(range(1, 24))):
+def power_exp(data, max_degree):
     """
         Power expansion of the data matrix passed as argument
         
@@ -57,6 +57,7 @@ def power_exp(data, max_degree, base_cols=list(range(1, 24))):
         ------
             New augmented data matrix
     """
+    base_cols = list(range(1, 24))
     for i in range(2, max_degree + 1):
         base_cols_powered = data[:, base_cols] ** i
         data = np.concatenate((data, base_cols_powered), axis=1)
