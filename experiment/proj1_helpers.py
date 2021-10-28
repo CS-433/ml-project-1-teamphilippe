@@ -2,7 +2,7 @@
 """some helper functions for project 1."""
 import csv
 import numpy as np
-from cleaning import *
+from experiment.cleaning import *
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -14,9 +14,9 @@ def load_csv_data(data_path, sub_sample=False):
     if not Path(data_path).exists():
         print('==> Unzipping the data...')
         # If the data folder does not exist, then unzip it
-        with ZipFile('../data/data.zip', 'r') as zipped_file:
+        with ZipFile('data/data.zip', 'r') as zipped_file:
             # Extract the data files
-            zipped_file.extractall(path='../data')
+            zipped_file.extractall(path='data')
             print('Data unzipped in the directory "data"')
     
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)

@@ -2,7 +2,7 @@
 
 from implementations import *
 import matplotlib.pyplot as plt
-from expansion import *
+from experiment.expansion import *
 
 """
 Functions for the cross validation
