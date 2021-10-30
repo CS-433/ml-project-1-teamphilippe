@@ -97,7 +97,7 @@ def quad_histograms(x, idx_1, idx_2, idx_3, idx_4):
     plt.show()
     
     
-def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
+def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te, degree_exp):
     """
         Visualization the curves of mse_tr and mse_te.
         Parameters
@@ -111,8 +111,7 @@ def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
                 acc_te:
                     The losses on the test set
     """
-
-    degrees = list(range(min_degree, max_degree + 1))
+    
     val_lambdas = list(map(lambda x: f'{x:.4e}', lambdas))
 
     # Create the heatmap
@@ -120,17 +119,24 @@ def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
     im = ax.imshow(acc_te, cmap='viridis')
 
     
+    if degree_exp:
+        # Create the list of all degrees if the cross validation over degrees is required
+        degrees = list(range(min_degree, max_degree + 1))
+        plt.xlabel("Degree")
+    else:
+        # Otherwise, empty axis
+        degrees = [""]
+       
     # Set the axis labels and value
-    ax.set_xticks(np.arange(len(degrees)))
+    ax.set_xticks(np.arange(len(degrees))) 
     ax.set_yticks(np.arange(len(val_lambdas)))
-
-    ax.set_xticklabels(degrees)
     ax.set_yticklabels(val_lambdas)
+    ax.set_xticklabels(degrees)
     plt.colorbar(im, ax=ax)
 
     # Set titles
-    plt.xlabel("Degree")
     plt.ylabel("Lambda")
     plt.title("Cross validation")
+    plt.savefig("crossval2d.png")
     plt.show()
 

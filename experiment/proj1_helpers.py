@@ -6,6 +6,7 @@ from experiment.cleaning import *
 from pathlib import Path
 from zipfile import ZipFile
 from math import comb
+from experiment.metrics import *
 
 
 def load_csv_data(data_path, sub_sample=False):
