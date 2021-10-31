@@ -10,6 +10,7 @@
 We separated the code into multiple files instead of having all the implementations in a single huge unreadable file.
 As asked, the implementations.py file contains all the functions for the models.
 
+- report.pdf : the report for this project
 - implementations.py : models we were asked to implement, the SGD function we used to train the models
 - project1.ipynb : notebook containing the data analysis, cleaning and features processing steps as
   well as the cross validation for the hyperparameters
