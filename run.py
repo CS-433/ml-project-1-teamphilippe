@@ -1,6 +1,6 @@
 from experiment.proj1_helpers import *
 from experiment.cleaning import *
-from experiment.simulation import process_test_set
+from experiment.proj1_helpers import process_test_set
 from experiment.expansion import *
 from implementations import ridge_regression
 

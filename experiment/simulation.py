@@ -1,6 +1,5 @@
 from experiment.cross_validation import *
 from experiment.metrics import *
-from experiment.expansion import *
 from experiment.proj1_helpers import *
 
 """
@@ -74,65 +73,6 @@ def stochastic_gradient_descent_validation(y, tx, y_te, x_te, max_iters, gamma, 
     return w, losses[-1]
 
 
-def process_test_set(test_data_path, col_removed_training, default_values_training, above_lim_training,
-                     below_lim_training, means, stds, cols_angle, best_degree, expansion=True):
-    """
-        Load and pre-process test set
-        Parameters
-        ----------
-            test_data_path :
-                The os path to the test data set
-             col_removed_training :
-                Features removed in the training set
-            default_values_training :
-                Default values of features used in the training set
-            above_lim_training :
-                Upper limit of outliers used in the training set
-            below_lim_training :
-                Lower limit of outliers used in the training set
-            means :
-                Means used to standardise the features in the training set
-            stds :
-                Stds used to standardise the features in the training set
-            cols_angle :
-                Indexes of the features representing angles
-            best_degree :
-                Best degree to consider for the polynomial expansion
-            expansion :
-                Boolean, whether to use polynomial expansion or not
-        Returns
-        -------
-             x_te_cleaned :
-                 The test data set cleaned and ready for predictions
-             ids_test :
-                Ids of the test samples
-            y_test :
-                Labels of the test samples
-    """
-    # load the data
-    y_test, x_test, ids_test = load_csv_data(test_data_path)
-
-    # Apply pre-processing
-    x_te_cleaned, _ = remove_col_default_values(x_test, cols_to_remove=col_removed_training)
-    x_te_cleaned, _ = replace_by_default_value(x_te_cleaned, default_values_training)
-    x_te_cleaned = check_all_azimuth_angles(x_te_cleaned, cols_angle)
-    x_te_cleaned, _, _ = clip_IQR(x_te_cleaned, above_lim=above_lim_training, below_lim=below_lim_training)
-
-    # Standardise the matrix and expand it
-    x_te_cleaned = (x_te_cleaned - means) / stds
-    
-    x_te_cleaned = add_bias_term(x_te_cleaned)
-    
-    if expansion:
-        # Need to increment the indexes of angle features since we added
-        # the bias term
-        x_te_cleaned = build_expansion(x_te_cleaned)
-        x_te_cleaned = add_sin_cos(x_te_cleaned, np.array(cols_angle) + 1)
-        x_te_cleaned = power_exp(x_te_cleaned, best_degree)
-    
-    return x_te_cleaned, ids_test, y_test
-
-
 def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, max_degree, gamma):
     """
         Train the given model and predict the labels of the local test set.
@@ -180,6 +120,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed)
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
@@ -194,14 +135,13 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=lambdas, max_degree=max_degree, gamma=gamma, seed=seed)
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
                                                                  compute_loss_reg_logistic_regression,
                                                                  compute_gradient_reg_logistic_regression,
                                                                  lambda_=best_lambda)
-
-        x_te = power_exp(x_te, best_degree)
         
         # Predict the labels on the local test set
         y_hat_te = predict_labels_logistic_regression(w, x_te)
@@ -217,6 +157,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed, batch_size=y_tr.shape[0])
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves.
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
@@ -231,6 +172,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed)
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Train the model with the best parameters on the local training set + plot the loss curves
             w, loss_mse = stochastic_gradient_descent_validation(y_tr, x_tr, y_te, x_te, max_iters, gamma,
@@ -245,6 +187,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 max_iters, lambdas=[0.0], max_degree=max_degree, gamma=gamma, seed=seed, optimization='least_squares')
             
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Find the least squares solution via the normal equation
             w, loss_mse = least_squares(y_tr, x_tr)
@@ -258,6 +201,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
                 seed=seed, optimization='ridge_normal_eq')
 
             x_tr = power_exp(x_tr, best_degree)
+            x_te = power_exp(x_te, best_degree)
 
             # Return the solution to the (regularised) normal equation
             w, loss_mse = ridge_regression(y_tr, x_tr, best_lambda)
@@ -265,9 +209,7 @@ def train_and_predict(y_tr, x_tr, y_te, x_te, model, seed, max_iters, lambdas, m
         else:
             print(f'Model ({model}) not supported')
             return
-        
-        x_te = power_exp(x_te, best_degree)
-        
+                
         # Predict the labels on the local test set
         y_hat_te = predict_labels(w, x_te)
 
@@ -321,10 +263,7 @@ def run_experiment(y, x, model, seed, ratio_split_tr, cols_angle, max_iters=100,
 
     if model in ['logistic_regression', 'reg_logistic_regression']:
         # As explained on the forum, the input for the logistic regression should have label in {0,1}
-        y_tr[y_tr == -1.0] = 0.0
-        y_te[y_te == -1.0] = 0.0
-
-   
+        y_tr[y_tr == -1.0] = 0.0   
         
     x_tr = add_sin_cos(x_tr, np.array(cols_angle) + 1)
     x_te = add_sin_cos(x_te, np.array(cols_angle) + 1)

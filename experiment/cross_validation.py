@@ -39,9 +39,9 @@ def build_k_indices(y, k_fold, seed):
     return np.array(k_indices)
 
 
-def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
+def cross_validation_visualization(lambdas, min_degree, max_degree, loss_te):
     """
-        visualization the curves of mse_tr and mse_te.
+        Visualization of the curves of mse_tr and mse_te.
         Parameters
             ----------
                 lambdas:
@@ -50,14 +50,14 @@ def cross_validation_visualization(lambdas, min_degree, max_degree, acc_te):
                     Min degree in the polynomial expansion
                 max_degree:
                     Max degree in the polynomial expansion
-                acc_te:
+                loss_te:
                     The losses on the test set
     """
 
     degrees = list(range(min_degree, max_degree + 1))
 
     fig, ax = plt.subplots()
-    im = ax.imshow(acc_te, cmap='viridis')
+    im = ax.imshow(loss_te, cmap='viridis')
 
     ax.set_xticks(np.arange(len(degrees)))
     ax.set_yticks(np.arange(len(lambdas)))
@@ -216,8 +216,6 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
 
     # Find the best arguments
     argmin = rmse_te.argmin()
-    #best_lam_ind = argmin // max_degree
-    #best_degree = argmin % max_degree + min_degree
     best_lam_ind = argmin // nb_degree
     best_degree = argmin % nb_degree + min_degree
 
