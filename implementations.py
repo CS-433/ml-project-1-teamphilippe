@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from matplotlib import pyplot as plt
-from models.loss import *
+from models.loss_gradient import *
 from experiment.metrics import *
 
 """

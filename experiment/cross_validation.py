@@ -3,6 +3,7 @@
 from implementations import *
 import matplotlib.pyplot as plt
 from experiment.expansion import *
+from experiment.visualisation import *
 
 """
 Functions for the cross validation
@@ -37,39 +38,6 @@ def build_k_indices(y, k_fold, seed):
                  for k in range(k_fold)]
 
     return np.array(k_indices)
-
-
-def cross_validation_visualization(lambdas, min_degree, max_degree, loss_te):
-    """
-        Visualization of the curves of mse_tr and mse_te.
-        Parameters
-            ----------
-                lambdas:
-                    lambda that were used to compute the loss on the train and test set
-                min_degree:
-                    Min degree in the polynomial expansion
-                max_degree:
-                    Max degree in the polynomial expansion
-                loss_te:
-                    The losses on the test set
-    """
-
-    degrees = list(range(min_degree, max_degree + 1))
-
-    fig, ax = plt.subplots()
-    im = ax.imshow(loss_te, cmap='viridis')
-
-    ax.set_xticks(np.arange(len(degrees)))
-    ax.set_yticks(np.arange(len(lambdas)))
-
-    ax.set_xticklabels(degrees)
-    ax.set_yticklabels(lambdas)
-    plt.colorbar(im, ax=ax)
-
-    plt.xlabel("Degree")
-    plt.ylabel("Lambda")
-    plt.title("Cross validation")
-    plt.show()
 
 
 def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, gamma, compute_loss, compute_gradient,
@@ -134,7 +102,8 @@ def cross_validation_one_step(y, x, k_indices, k, max_iters, lambda_, degree, ga
     return compute_rmse(loss_tr), compute_rmse(loss_te)
 
 
-def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, lambdas, max_degree, gamma=0.0,
+def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, lambdas, max_degree, degree_exp=True,
+                             gamma=0.0,
                              k_fold=8, seed=1, batch_size=1, optimization='sgd'):
     """
         Perform cross validation to find the best lambda (regulariser) and gamma (learning rate).
@@ -155,6 +124,8 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
                 Range of values to find the best lambda
             max_degree :
                 Max degree used in the polynomial expansion
+            degree_exp:
+                Need to cross-validate the degree or not
             gamma :
                 Step size of the stochastic gradient descent
             k_fold:
@@ -173,14 +144,21 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
     """
     print("Beginning cross-validation")
 
-    min_degree = 2
+    min_degree = 4
 
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
-    range_degree = range(min_degree, max_degree + 1)
+
+    if degree_exp:
+        # If we need to cross-validate the degree, we create the corresponding range
+        range_degree = range(min_degree, max_degree + 1)
+        nb_degree = len(range_degree)
+    else:
+        # Otherwise we simply create a list we one element
+        nb_degree = 1
+        range_degree = [0]
 
     nb_lambdas = len(lambdas)
-    nb_degree = len(range_degree)
 
     # Tables which will store all the loss value for all lambda-gamma combination
     rmse_tr = np.zeros((nb_lambdas, nb_degree))
@@ -188,14 +166,17 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
 
     # iterate over all (gamma, lambda) pairs
     for ind_deg, deg in enumerate(range_degree):
-        x_exp = power_exp(tx, deg)
+        # Apply the power expansion only if we need to cross-validate the degree
+        if degree_exp:
+            x_exp = power_exp(tx, deg)
+        else:
+            x_exp = tx
 
         for ind_lambda, lambda_ in enumerate(lambdas):
             # List to store the loss for the current lambda and gamma pairs
             rmse_tr_tmp = []
             rmse_te_tmp = []
 
-            print(f"Perform cross-validation for lambda={lambda_:.4f} and degree={deg}")
             # Perform the cross validation
             for k in range(k_fold):
                 rmse_train, rmse_test = cross_validation_one_step(y, x_exp, k_indices,
@@ -209,16 +190,13 @@ def perform_cross_validation(y, tx, compute_loss, compute_gradient, max_iters, l
             rmse_tr[ind_lambda, ind_deg] = np.mean(rmse_tr_tmp)
             rmse_te[ind_lambda, ind_deg] = np.mean(rmse_te_tmp)
 
-            print(f"Loss for lambda={lambda_:.4f} and degree={deg} : "
-                  f"tr={np.mean(rmse_tr_tmp):.6f}, te={np.mean(rmse_te_tmp):.6f}\n")
-
-    cross_validation_visualization(lambdas, min_degree, max_degree, rmse_te)
+    cross_validation_visualization(lambdas, min_degree, max_degree, rmse_te, degree_exp)
 
     # Find the best arguments
     argmin = rmse_te.argmin()
     best_lam_ind = argmin // nb_degree
-    best_degree = argmin % nb_degree + min_degree
 
+    best_degree = argmin % nb_degree + min_degree
     best_lambda = lambdas[best_lam_ind]
 
     return best_lambda, best_degree

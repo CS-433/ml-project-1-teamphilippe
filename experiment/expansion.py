@@ -41,7 +41,7 @@ def add_sin_cos(data, columns):
         ------
             New data matrix augmented with new combinations of features
     """
-    data = np.concatenate((data, np.cos(data[:, columns])), axis=1)#, np.sin(data[:, columns])), axis=1)
+    data = np.concatenate((data, np.cos(data[:, columns]), np.sin(data[:, columns])), axis=1)
     return data
 
 

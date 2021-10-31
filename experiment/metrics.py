@@ -1,20 +1,6 @@
 import numpy as np
 
 
-def sigmoid(x):
-    """
-    Apply the sigmoid function to the input x 
-    Parameters 
-        ----------
-            x: 
-                The vectors to which we want to apply the sigmoid function
-        Returns 
-        -------
-            The sigmoid of the input
-    """
-    return 1.0 / (1 + np.exp(-x))
-
-
 def compute_accuracy(y, y_hat):
     """
         Compute the accuracy given the ground truth and the predicted data

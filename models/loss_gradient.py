@@ -1,5 +1,4 @@
 import numpy as np
-from experiment.metrics import sigmoid
 
 """
 Logistic regression related functions
@@ -47,7 +46,7 @@ def compute_loss_logistic_regression(y, tx, w, *args):
             Loss of the weight vector, using the logistic regression method, computed with the parameters
     """
     xtw = tx @ w
-    return np.sum(np.log(1 + np.exp(xtw)) - y * xtw) / tx.shape[0]
+    return  np.sum(np.log(1 + np.exp(xtw)) - y * xtw) / tx.shape[0]
 
 
 # Regularized logistic regression
@@ -184,3 +183,17 @@ def compute_loss_ridge(y, tx, w, lambda_):
             Loss of the weight vector, using the ridge regression method, computed with the parameters
     """
     return compute_loss_least_squares(y, tx, w)
+
+
+def sigmoid(x):
+    """
+    Apply the sigmoid function to the input x
+    Parameters
+        ----------
+            x:
+                The vectors to which we want to apply the sigmoid function
+        Returns
+        -------
+            The sigmoid of the input
+    """
+    return 1.0 / (1 + np.exp(-x))
