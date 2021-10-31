@@ -39,7 +39,7 @@ We provide a run.py file which does the following :
 Note : as explained in the report, we noticed a bug in our code after making our best submission on AICrowd.
 Therefore, this run.py script reproduces the submission with an accuracy of 82.8% on AICrowd and not the actual best submission that we made.
 
-To run this code, you will need Python 3 and numpy installed. To execute it you can :
+To run this script, you will need Python 3, numpy, zipfile and matplotlib installed. To execute it you can :
 - Simply run it in a terminal : ```python3 run.py```
 - Or call the main function from within a notebook : 
 ```python
